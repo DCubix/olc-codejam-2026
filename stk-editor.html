@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STK Workshop</title>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
+<style>
+:root{color-scheme:dark;--bg:#111715;--panel:#19211f;--panel2:#202b28;--line:#34423d;--muted:#91a19a;--text:#ecf1ed;--mint:#a7e3c4;--mint-deep:#305744;--coral:#f18b72;--gold:#edc775;--danger:#f06f68;--radius:5px;--mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;--sans:"Trebuchet MS",Arial,sans-serif}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:13px var(--sans)}button,input,select{font:inherit;color:inherit}button{border:1px solid var(--line);background:#222c29;padding:7px 10px;border-radius:var(--radius);cursor:pointer;transition:background .15s,border-color .15s}button:hover{background:#2b3934;border-color:#62766b}button:disabled{opacity:.45;cursor:not-allowed}button.primary{background:var(--mint);border-color:var(--mint);color:#17251e;font-weight:700}button.primary:hover{background:#c0f1d5}button.icon{display:inline-grid;place-items:center;width:32px;height:31px;padding:0;font-size:16px}button.danger{color:#ffaaa0}.app{min-height:100vh;display:grid;grid-template-rows:58px minmax(360px,1fr) 220px}.topbar{display:flex;align-items:center;gap:16px;padding:0 18px;border-bottom:1px solid var(--line);background:#151c1a}.brand{display:flex;align-items:center;gap:10px;min-width:190px}.brand-mark{width:25px;height:25px;border:1px solid var(--mint);border-radius:50%;position:relative}.brand-mark:before,.brand-mark:after{content:"";position:absolute;background:var(--mint);height:1px;width:14px;left:5px;top:11px;transform:rotate(-35deg)}.brand-mark:after{transform:rotate(40deg);width:10px;left:7px;top:14px}.brand h1{font:700 15px Georgia,serif;letter-spacing:.2px;margin:0}.brand small{display:block;color:var(--muted);font:10px var(--mono);margin-top:3px}.toolbar{display:flex;gap:7px;align-items:center}.spacer{flex:1}.file-name{color:var(--muted);font:11px var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:230px}.dirty{width:7px;height:7px;border-radius:50%;background:var(--gold);display:inline-block;margin-right:7px;vertical-align:1px}.workspace{display:grid;grid-template-columns:240px minmax(360px,1fr) 290px;min-height:0}.sidebar,.inspector{background:var(--panel);min-height:0;display:flex;flex-direction:column}.sidebar{border-right:1px solid var(--line)}.inspector{border-left:1px solid var(--line)}.section-head{height:42px;min-height:42px;padding:0 13px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:1px;color:var(--muted);font:10px var(--mono)}.section-head strong{color:#cbd5cf;font-weight:500}.tree-tools{display:flex;gap:4px}.tree-tools button{padding:3px 7px;font:11px var(--mono)}.tree{overflow:auto;padding:8px 6px;flex:1}.tree-row{display:flex;align-items:center;gap:7px;min-height:30px;padding:3px 6px;border-radius:4px;cursor:pointer;color:#d6dfd9}.tree-row:hover{background:#25312d}.tree-row.selected{background:#2c4438;color:#d5f4e1;box-shadow:inset 2px 0 var(--mint)}.tree-row .indent{flex:none}.shape-icon{width:18px;text-align:center;color:var(--mint);font:12px var(--mono)}.tree-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}.tree-tag{color:#82958b;font:10px var(--mono)}.empty-tree{padding:15px 10px;color:var(--muted);line-height:1.5}.stage-wrap{min-width:0;min-height:0;position:relative;background-color:#121917;background-image:linear-gradient(#ffffff07 1px,transparent 1px),linear-gradient(90deg,#ffffff07 1px,transparent 1px);background-size:24px 24px;overflow:hidden}.stage-wrap.drag-over{outline:2px solid var(--mint);outline-offset:-4px}.stage{display:block;width:100%;height:100%;cursor:crosshair}.stage-tools{position:absolute;top:12px;left:12px;display:flex;gap:5px}.stage-tools button{background:#1b2421eF}.stage-hint{position:absolute;left:14px;bottom:12px;color:#9aa89f;font:10px var(--mono);pointer-events:none;text-shadow:0 1px 3px #000}.stage-empty{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;color:#8b9c92;text-align:center}.stage-empty div{max-width:240px;line-height:1.6}.stage-empty b{display:block;color:#d5e3da;font:20px Georgia,serif;margin-bottom:7px}.inspector-content{padding:12px 13px;overflow:auto;flex:1}.empty-inspector{color:var(--muted);line-height:1.6;padding:5px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px 9px}.field{display:flex;flex-direction:column;gap:5px;min-width:0}.field.wide{grid-column:1/-1}.field label{font:10px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.45px}.field input,.field select{width:100%;height:31px;background:#111816;border:1px solid #34423d;border-radius:4px;padding:5px 7px;outline:none}.field input:focus,.field select:focus{border-color:var(--mint)}input[type=color]{padding:2px;height:33px}input[type=number]{font-family:var(--mono)}.field-note{color:#7f9087;font:10px var(--mono)}.inspector-actions{display:flex;gap:7px;border-top:1px solid var(--line);padding-top:12px;margin-top:13px}.inspector-actions button{flex:1}.timeline{border-top:1px solid var(--line);background:#171f1d;display:grid;grid-template-rows:43px 1fr;min-height:0}.timeline-head{display:flex;align-items:center;gap:8px;padding:0 13px;border-bottom:1px solid var(--line)}.timeline-head .section-title{font:700 12px Georgia,serif;margin-right:9px}.timeline-head select,.timeline-head input{height:28px;background:#111816;border:1px solid var(--line);border-radius:4px;padding:4px 7px}.timeline-head input{width:64px;font-family:var(--mono)}.timeline-head select{max-width:160px}.timeline-body{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:0}.track-labels{overflow:auto;border-right:1px solid var(--line);padding:8px 12px}.track-label{height:31px;display:flex;align-items:center;gap:8px;color:#bcc9c1;font:11px var(--mono);overflow:hidden;text-overflow:ellipsis}.track-label .swatch{width:7px;height:7px;border-radius:50%;flex:none}.timeline-scroll{overflow:auto;position:relative;padding:8px 12px 10px}.ruler{height:20px;position:relative;border-bottom:1px solid #43514a;margin-bottom:5px;min-width:700px}.tick{position:absolute;top:0;transform:translateX(-50%);color:#84948a;font:9px var(--mono)}.tick:after{content:"";display:block;height:5px;width:1px;background:#56645c;margin:3px auto 0}.track-row{height:31px;position:relative;min-width:700px;border-bottom:1px solid #ffffff08}.key-dot{position:absolute;top:9px;width:9px;height:9px;transform:translateX(-50%) rotate(45deg);background:var(--mint);border:1px solid #d8ffe7;cursor:pointer;z-index:1}.key-dot:hover{background:white;transform:translateX(-50%) rotate(45deg) scale(1.3)}.playhead{position:absolute;top:0;bottom:0;width:1px;background:var(--coral);z-index:2;pointer-events:none}.playhead:before{content:"";position:absolute;top:0;left:-4px;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid var(--coral)}.timeline-foot{position:absolute;right:13px;bottom:5px;color:#74857b;font:9px var(--mono);pointer-events:none}.status{font:10px var(--mono);color:var(--muted);min-width:75px}.diagnostics{position:fixed;left:50%;bottom:228px;transform:translateX(-50%);z-index:9;max-width:min(680px,90vw);max-height:120px;overflow:auto;background:#3d211e;border:1px solid #a75449;color:#ffd0c8;padding:9px 12px;border-radius:5px;font:11px var(--mono);box-shadow:0 10px 35px #0008;display:none}.diagnostics.show{display:block}.diagnostics .warn{color:#ffe1a7}.toast{position:fixed;top:67px;left:50%;transform:translate(-50%,-8px);opacity:0;pointer-events:none;background:#273c31;border:1px solid #52755e;color:#dbf5e4;padding:8px 12px;border-radius:4px;z-index:10;transition:.18s;font:11px var(--mono)}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:940px){.workspace{grid-template-columns:205px minmax(300px,1fr)}.inspector{grid-column:1/-1;border-left:0;border-top:1px solid var(--line);max-height:260px}.app{grid-template-rows:58px minmax(460px,1fr) 230px}.workspace{grid-template-rows:minmax(340px,1fr) 230px}.sidebar{grid-row:1}.stage-wrap{grid-row:1;grid-column:2}.inspector{grid-row:2}.timeline{grid-row:3}.app{grid-template-rows:58px auto 230px}.workspace{min-height:700px}}
+@media(max-width:620px){.app{display:flex;flex-direction:column;min-height:100vh}.topbar{height:auto;min-height:56px;flex-wrap:wrap;padding:9px 10px;gap:9px}.brand{min-width:140px}.brand h1{font-size:13px}.toolbar{gap:4px}.toolbar button{padding:6px 7px}.file-name{display:none}.workspace{display:flex;flex-direction:column;min-height:0}.stage-wrap{height:56vh;min-height:320px;order:0}.sidebar{order:1;border:0;border-top:1px solid var(--line);max-height:200px}.inspector{order:2;max-height:none}.timeline{order:3;min-height:220px}.timeline-body{grid-template-columns:115px minmax(0,1fr)}.track-labels{padding:8px}.timeline-head{gap:5px;padding:0 7px}.timeline-head .section-title{margin-right:2px}.timeline-head select{max-width:100px}.timeline-head input{width:50px}.timeline-head button{padding:5px 7px}.diagnostics{bottom:225px}.status{display:none}}
+</style>
+<style>[hidden]{display:none!important}.brand h1{letter-spacing:0}</style>
+<style>@media(max-width:620px){.app,.workspace,.timeline,.timeline-body,.timeline-head{width:100%;min-width:0}.app{max-width:100vw;overflow-x:hidden}.timeline-head{overflow-x:auto;overflow-y:hidden;justify-content:flex-start;scrollbar-width:thin}.timeline-head>*{flex-shrink:0}.timeline-head .spacer{flex:0 0 6px}.timeline-scroll{min-width:0}}</style>
+<style>[x-cloak]{display:none!important}</style>
+<style>.timeline-content{position:relative}</style>
+<style>.key-dot.selected{background:var(--coral);border-color:#ffe0d7;box-shadow:0 0 0 3px #f18b7255}</style>
+<style>
+.app{height:100vh;height:100dvh;min-height:0;grid-template-rows:58px minmax(0,1fr) 220px;overflow:hidden}
+.workspace{min-height:0}
+.timeline{position:fixed;left:0;right:0;bottom:0;height:220px;z-index:20}
+@media(max-width:940px) and (min-width:621px){.workspace{min-height:0;overflow-y:auto}}
+@media(max-width:620px){.app{height:auto;min-height:100vh;min-height:100dvh;padding-bottom:220px;overflow:visible}.workspace{min-height:0}.timeline{height:220px}}
+</style>
+</head>
+<body>
+<main class="app" x-data="stkEditor" x-cloak @keydown.window="onKeyDown($event)" @keyup.window="onKeyUp($event)" @resize.window="resizeCanvas()" @beforeunload.window="guardUnsaved($event)">
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"></span><div><h1>STK Workshop</h1><small>FIGURE + MOTION EDITOR</small></div></div>
+    <div class="toolbar">
+      <button class="icon" title="Undo (Ctrl+Z)" aria-label="Undo" :disabled="!undoStack.length" @click="undo()">↶</button><button class="icon" title="Redo (Ctrl+Y)" aria-label="Redo" :disabled="!redoStack.length" @click="redo()">↷</button><button title="Open an STK file" @click="$refs.fileInput.click()">Open</button><button title="Create a new figure" @click="newFigure()">New</button><button class="primary" title="Download as an STK file" @click="exportFile()">Export .stk</button>
+    </div>
+    <div class="spacer"></div><div class="file-name"><span class="dirty" x-show="dirty"></span><span x-text="fileName"></span></div>
+    <span class="status" x-text="dirty?'Modified':'Ready'"></span><input x-ref="fileInput" type="file" accept=".stk,.txt,text/plain" hidden @change="onFileSelected($event)"><input x-ref="spriteInput" type="file" accept="image/*" hidden @change="onSpriteSelected($event)">
+  </header>
+  <section class="workspace">
+    <aside class="sidebar">
+      <div class="section-head"><strong>Figure parts</strong><div class="tree-tools"><button title="Add a part" @click="addPart(null)">+ Part</button><button title="Add a child to the selected part" @click="addPart(selected||null)">+ Child</button></div></div>
+      <div class="tree">
+        <div class="empty-tree" x-show="!doc.parts.length">No parts yet. Add a root part to begin.</div>
+        <template x-for="row in treeRows()" :key="row.part.id"><div class="tree-row" :class="{selected:selected===row.part.id}" @click="selectPart(row.part.id)"><span class="indent" :style="`width:${row.depth*13}px`"></span><span class="shape-icon" x-text="row.part.shape==='C'?'━':row.part.shape==='O'?'◯':row.part.shape==='S'?'▦':'◇'"></span><span class="tree-label" x-text="row.part.tag||`${row.part.shape} part`"></span><span class="tree-tag" x-text="row.part.tag?'#'+row.part.tag:''"></span></div></template>
+      </div>
+      <div class="section-head"><strong>Figure color</strong><span x-text="`${doc.parts.length} / 64`"></span></div>
+      <div style="padding:10px 13px 13px;display:flex;align-items:center;gap:9px"><input type="color" :value="hex(doc.fallback)" aria-label="Fallback color" @change="changeFallbackColor($event)"><span class="field-note">Fallback for parts without a color</span></div>
+    </aside>
+    <div class="stage-wrap" :class="{'drag-over':dragOver}" @dragover.prevent="dragOver=true" @dragleave="dragOver=false" @drop.prevent="onDrop($event)">
+      <canvas id="stage" class="stage" x-ref="canvas" aria-label="Stick figure editing canvas" @pointerdown="canvasPointerDown($event)" @pointermove="canvasPointerMove($event)" @pointerup="canvasPointerUp()" @pointercancel="canvasPointerUp()" @wheel.prevent="canvasWheel($event)"></canvas>
+      <div class="stage-tools"><button class="icon" title="Fit figure in view" @click="fitView()">⌖</button><button class="icon" title="Zoom out" @click="zoomBy(1/1.2)">−</button><button class="icon" title="Zoom in" @click="zoomBy(1.2)">+</button></div>
+      <div class="stage-hint">DRAG TO POSE · DRAG GOLD TIP TO ROTATE · SHIFT + DRAG TO EDIT BASE · SPACE + DRAG TO PAN · ARROW KEYS TO NUDGE (SHIFT = ×10)</div>
+      <div class="stage-empty" x-show="!doc.parts.length"><div><b>Build a figure</b>Add a part or open an existing .stk file. Drop a file (and sprite images) anywhere on this canvas.</div></div>
+    </div>
+    <aside class="inspector">
+      <div class="section-head"><strong>Part inspector</strong><span x-text="selectedPart()?.tag||selectedPart()?.shape||'No selection'"></span></div>
+      <div class="inspector-content">
+        <div class="empty-inspector" x-show="!selectedPart()">Select a part on the canvas or in the hierarchy to edit its properties.</div>
+        <div class="fields" x-show="selectedPart()">
+          <div class="field"><label>Shape</label><select :value="selectedPart()?.shape" @change="setPartProperty('shape',$event.target.value)"><option value="C">Capsule</option><option value="O">Circle</option><option value="S">Sprite</option><option value="N">Transform node</option></select></div>
+          <div class="field"><label>Tag</label><input type="text" :value="selectedPart()?.tag||''" @change="setPartProperty('tag',$event.target.value)"></div>
+          <div class="field wide"><label>Parent</label><select :value="selectedPart()?.parent||''" @change="setPartProperty('parent',$event.target.value)"><option value="">Root</option><template x-for="part in parentChoices()" :key="part.id"><option :value="part.id" x-text="part.tag||part.shape+' part'"></option></template></select></div>
+          <div class="field"><label x-text="canSetKeyframe()?`Offset X (frame ${frame})`:'Offset X'"></label><input type="number" step="any" :value="poseValue('x')" @change="setPartProperty('x',$event.target.value)"></div>
+          <div class="field"><label x-text="canSetKeyframe()?`Offset Y (frame ${frame})`:'Offset Y'"></label><input type="number" step="any" :value="poseValue('y')" @change="setPartProperty('y',$event.target.value)"></div>
+          <div class="field"><label x-text="selectedPart()?.shape==='O'?'Diameter':selectedPart()?.shape==='S'?'Width (scaled)':'Length'"></label><input type="number" step="any" :value="selectedPart()?.length" @change="setPartProperty('length',$event.target.value)"></div>
+          <div class="field" x-show="selectedPart()?.shape==='C'"><label>Width</label><input type="number" step="any" :value="selectedPart()?.width" @change="setPartProperty('width',$event.target.value)"></div>
+          <div class="field"><label x-text="canSetKeyframe()?`Rotation° (frame ${frame})`:'Rotation°'"></label><input type="number" step="any" :value="poseValue('rotation')" @change="setPartProperty('rotation',$event.target.value)"></div>
+          <div class="field" x-show="selectedPart()?.shape==='C'||selectedPart()?.shape==='O'"><label>Color</label><input type="color" :value="hex(selectedPart()?.color||doc.fallback)" @change="setPartProperty('color',$event.target.value)"></div>
+          <template x-if="selectedPart()?.shape==='S'"><div class="fields wide" style="grid-column:1/-1"><div class="field wide"><label>Image file</label><div style="display:flex;gap:5px"><input type="text" placeholder="sprite.png" :value="selectedPart()?.file||''" @change="setPartProperty('file',$event.target.value)"><button title="Load an image to preview (sets the file name)" @click="$refs.spriteInput.click()">Load…</button></div></div><div class="field"><label>Origin X</label><input type="number" step="1" :value="selectedPart()?.ox" @change="setPartProperty('ox',$event.target.value)"></div><div class="field"><label>Origin Y</label><input type="number" step="1" :value="selectedPart()?.oy" @change="setPartProperty('oy',$event.target.value)"></div><div class="field"><label>Tiles X</label><input type="number" min="1" step="1" :value="selectedPart()?.tilesX" @change="setPartProperty('tilesX',$event.target.value)"></div><div class="field"><label>Tiles Y</label><input type="number" min="1" step="1" :value="selectedPart()?.tilesY" @change="setPartProperty('tilesY',$event.target.value)"></div><div class="field wide" x-show="canSetKeyframe()"><label x-text="`Sprite frame (frame ${frame})`"></label><input type="number" min="0" step="1" :value="poseValue('sprite')" @change="setPartProperty('sprite',$event.target.value)"><span class="field-note">Keyframed. Interpolated between keyframes and rounded down.</span></div></div></template>
+          <div class="field" x-show="selectedPart()?.shape!=='N'"><label>Order</label><input type="number" step="1" title="Draw order — higher values draw on top" :value="selectedPart()?.order||0" @change="setPartProperty('order',$event.target.value)"></div>
+          <div class="field wide" x-show="canSetKeyframe()"><span class="field-note">Offset/rotation edit the keyframe at the current frame.</span></div>
+          <div class="inspector-actions wide"><button @click="duplicateSelected()">Duplicate</button><button class="danger" @click="removeSelected()">Delete</button></div>
+        </div>
+      </div>
+    </aside>
+  </section>
+  <section class="timeline">
+    <div class="timeline-head">
+      <span class="section-title">Animation</span>
+      <select x-show="!renamingAnimation" aria-label="Animation" title="Double-click to rename" :value="animation" @change="selectAnimation($event.target.value)" @dblclick="beginRenameAnimation()"><template x-for="item in doc.animations" :key="item.name"><option :value="item.name" x-text="item.name"></option></template></select>
+      <input x-show="renamingAnimation" x-cloak x-ref="animationNameInput" type="text" aria-label="Rename animation" style="width:160px" :value="animationDraft" @input="animationDraft=$event.target.value" @keydown.enter="commitRenameAnimation()" @keydown.escape="cancelRenameAnimation()" @blur="commitRenameAnimation()" x-effect="renamingAnimation && ($refs.animationNameInput.focus(), $refs.animationNameInput.select())">
+      <button class="icon" title="Add animation" @click="newAnimation()">+</button><button class="icon" title="Duplicate animation" @click="duplicateAnimation()">⧉</button><button class="icon danger" title="Delete animation" :disabled="doc.animations.length<=1" @click="deleteAnimation()">×</button>
+      <span style="color:var(--muted);font:10px var(--mono)">FRAMES</span><input type="number" min="1" max="10000" aria-label="Animation duration in frames" :value="activeAnimation()?.duration" @change="changeDuration($event.target.value)">
+      <select aria-label="Playback mode" :value="activeAnimation()?.mode" @change="changeMode($event.target.value)"><option value="OS">One shot</option><option value="L">Loop</option><option value="P">Ping-pong</option></select>
+      <div class="spacer"></div><button class="icon" title="Set keyframe for selected part at current frame" aria-label="Set keyframe" :disabled="!canSetKeyframe()" @click="setSelectedKeyframe()">◆</button><button class="icon danger" title="Delete selected keyframe" aria-label="Delete selected keyframe" :disabled="!hasSelectedKey()" @click="deleteSelectedKey()">⌫</button><button class="icon" title="Copy selected keyframe (Ctrl+C)" aria-label="Copy keyframe" :disabled="!hasSelectedKey()" @click="copySelectedKeyframe()">⧉</button><button class="icon" title="Paste keyframe at current frame (Ctrl+V)" aria-label="Paste keyframe" :disabled="!canPasteKeyframe()" @click="pasteKeyframe()">⎘</button><button class="icon" title="Previous frame" @click="stepFrame(-1)">|‹</button><button class="icon" :title="playing?'Pause animation':'Play animation'" @click="togglePlayback()" x-text="playing?'Ⅱ':'▶'"></button><button class="icon" title="Next frame" @click="stepFrame(1)">›|</button>
+      <span class="status" x-text="`F ${frame}`"></span>
+    </div>
+    <div class="timeline-body"><div class="track-labels"><div class="field-note" x-show="!taggedParts().length">Add tags to parts to animate them.</div><template x-for="part in taggedParts()" :key="part.id"><div class="track-label"><span class="swatch" :style="`background:${hex(part.color||doc.fallback)}`"></span><span x-text="part.tag"></span></div></template></div><div class="timeline-scroll"><div class="timeline-content" x-ref="timelineContent" :style="`min-width:${timelineWidthPx()}px`" @pointerdown="timelinePointerDown($event)" @pointermove="timelinePointerMove($event)" @pointerup="timelinePointerUp($event)" @pointercancel="timelinePointerUp($event)"><div class="ruler" :style="`width:${timelineWidthPx()}px`"><template x-for="tick in timelineTicks()" :key="tick"><span class="tick" :style="`left:${tick*12+6}px`" x-text="tick"></span></template></div><div class="playhead" :style="`left:${frame*12+12}px`"></div><template x-for="part in taggedParts()" :key="part.id"><div class="track-row" :style="`width:${timelineWidthPx()}px`" @dblclick="keyOnRow(part.tag,$event)"><template x-for="key in (activeAnimation()?.tracks[part.tag]||[])" :key="key.id"><button class="key-dot" :class="{selected:isSelectedKey(part.tag,key.frame)}" :style="`left:${key.frame*12+12}px`" :title="`Frame ${key.frame}: Δ ${formatNum(key.x)}, ${formatNum(key.y)}, ${formatNum(key.rotation)}°${part.shape==='S'?' · sprite '+(key.sprite||0):''}`" @pointerdown.stop="keyframeDotPointerDown($event,part.tag,key.frame)" @pointermove.stop="keyframeDotPointerMove($event)" @pointerup.stop="keyframeDotPointerUp($event)" @pointercancel.stop="keyframeDotPointerUp($event)"></button></template></div></template></div><div class="timeline-foot" x-text="timelineFootText()"></div></div></div>
+  </section>
+</main>
+<div class="diagnostics" role="status" x-show="diagnostics.length"><template x-for="(item,index) in diagnostics" :key="index"><div :class="{warn:item.kind==='warn'}"><span x-show="item.line" x-text="`Line ${item.line}: `"></span><span x-text="item.text"></span></div></template></div><div class="toast" :class="{show:toastVisible}" x-show="toastVisible" x-text="toastMessage"></div>
+<script>
+(() => {
+  'use strict';
+  const MAX_PARTS = 64;
+  let state = {doc: blankDocument(), selected: null, animation: null, frame: 0, playing: false, dirty: false, fileName: 'Untitled figure', camera: {x: 0, y: 0, zoom: 1}, drag: null, space: false, lastTick: 0, diagnostics: [], undoStack: [], redoStack: [], historyApplying: false, timelineScrubbing: false, pingDirection: 1, dragOver:false, toastMessage:'', toastVisible:false, animationFrameId:0, resizeObserver:null, selectedKey:null, poseDrafts:{}, renamingAnimation:false, animationDraft:'', keyframeClipboard:null, dragKeyframe:null};
+  const canvas = document.querySelector('[x-ref="canvas"]'), ctx = canvas.getContext('2d');
+  const timelineContent = document.querySelector('[x-ref="timelineContent"]');
+  let nextKeyframeId = 1;
+
+  function blankDocument() {
+    return {fallback:[232,242,235], parts:[], animations:[], leading:[], trailing:[], notes:[], exportWarnings:[]};
+  }
+  function hex(rgb) { return '#' + rgb.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2,'0')).join(''); }
+  function parseColor(input, line) {
+    const values=Array.isArray(input)?input:String(input).trim().split(/\s+/);
+    const token=values.join('');
+    if (values.length===1 && /^#[\da-f]{6}$/i.test(token)) return token.slice(1).match(/../g).map(v => parseInt(v,16));
+    if (values.length===1 && /^#[\da-f]{3}$/i.test(token)) return token.slice(1).split('').map(v => parseInt(v+v,16));
+    if (values.length===3 && values.every(v=>v==='_'||Number.isFinite(Number(v)))) return values.map(v=>v==='_'?0:Math.max(0,Math.min(255,Math.trunc(Number(v)))));
+    throw Error(`Line ${line}: expected RGB values or #RRGGBB color`);
+  }
+  function num(token, line, name) {
+    if (token === undefined || token.trim() === '' || !Number.isFinite(Number(token))) throw Error(`Line ${line}: invalid ${name}`);
+    return Number(token);
+  }
+  function numOpt(token, line, name, def=0) { return token==='_' ? def : num(token, line, name); }
+  function readColorAndOrder(tokens, line) {
+    let colorTokens = tokens, order = 0;
+    if (tokens.length === 2 || tokens.length === 4) { order = Math.trunc(numOpt(tokens.at(-1), line, 'order')); colorTokens = tokens.slice(0, -1); }
+    else if (tokens.length !== 1 && tokens.length !== 3) throw Error(`Line ${line}: expected color and/or order fields`);
+    return { color: parseColor(colorTokens, line), order };
+  }
+  function parseSTK(source) {
+    const doc = blankDocument(), stack = [], tags = new Map(), diagnostics = [];
+    let pending = [], currentAnim = null, seenCommand = false;
+    const finishPart = (part, marker) => {
+      if (part.tag && tags.has(part.tag)) throw Error(`Line ${part.line}: duplicate part tag "${part.tag}"`);
+      doc.parts.push(part); if (part.tag) tags.set(part.tag, part);
+      if (marker === '>') stack.push(part.id);
+      else if (marker === '<') { if (!stack.length) diagnostics.push({line:part.line,kind:'warn',text:'Hierarchy pop with an empty parent stack'}); else stack.pop(); }
+    };
+    const lines = source.replace(/\r/g,'').split('\n');
+    for (let index=0; index<lines.length; index++) {
+      const raw = lines[index], trimmed = raw.trim(), lineNo = index + 1;
+      if (!trimmed || trimmed.startsWith('#')) { pending.push(raw); continue; }
+      const match = trimmed.match(/^([A-Za-z])\s*(.*)$/);
+      if (!match) { pending.push(raw); diagnostics.push({line:lineNo, kind:'warn', text:'Unrecognized line retained'}); continue; }
+      const command = match[1].toUpperCase(), rest = match[2];
+      try {
+        if (command === 'P') {
+          const tokens = rest.split(/\s+/).filter(Boolean);
+          if (tokens.length === 1 && tokens[0].startsWith('#')) doc.fallback = parseColor(tokens[0],lineNo);
+          else if (tokens.length >= 3) doc.fallback = tokens.slice(0,3).map((v,i) => Math.max(0,Math.min(255,Math.trunc(num(v,lineNo,['red','green','blue'][i])))));
+          else throw Error(`Line ${lineNo}: P requires three color values`);
+          doc.fallbackNotes = pending; pending=[]; seenCommand=true; continue;
+        }
+        if (['C','O','N'].includes(command)) {
+          if (doc.parts.length >= MAX_PARTS) throw Error(`Line ${lineNo}: maximum of ${MAX_PARTS} parts reached`);
+          const tailMatch = rest.match(/^(.*?)(?:\s*=\s*([^\s><]+))?\s*([><])?\s*$/);
+          const body = (tailMatch?.[1] || '').trim(), tag = tailMatch?.[2] || '', marker = tailMatch?.[3] || '';
+          const tokens = body.split(/\s+/).filter(Boolean);
+          const required = command === 'C' ? 5 : 4;
+          if (tokens.length < required) throw Error(`Line ${lineNo}: ${command} requires ${required} numeric fields`);
+          let x=num(tokens[0],lineNo,'x offset'), y=num(tokens[1],lineNo,'y offset'), length=num(tokens[2],lineNo,command==='O'?'diameter':'length'), rotation=numOpt(tokens[3],lineNo,'rotation');
+          let width=0, color=null, order=0;
+          if(command==='C') { width=num(tokens[4],lineNo,'width'); if(tokens.length > 5) ({color,order}=readColorAndOrder(tokens.slice(5),lineNo)); }
+          else if(command==='O' && tokens.length > 4) ({color,order}=readColorAndOrder(tokens.slice(4),lineNo));
+          else if(command==='N' && tokens.length > 4) throw Error(`Line ${lineNo}: N has no color field`);
+          const part={id:`p${doc.parts.length+1}`,shape:command, parent:stack.at(-1) || null, sourceParent:stack.at(-1) || null, sourceMarker:marker, x,y,length,rotation,width,color,order,tag,notes:pending,line:lineNo};
+          finishPart(part, marker); pending=[];
+          seenCommand=true; continue;
+        }
+        if (command === 'S') {
+          if (doc.parts.length >= MAX_PARTS) throw Error(`Line ${lineNo}: maximum of ${MAX_PARTS} parts reached`);
+          const m = rest.match(/^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+"([^"]*)"\s*(.*)$/);
+          if (!m) throw Error(`Line ${lineNo}: S format is S x y length rotation "file" ox oy tiles_x tiles_y [order] = tag`);
+          const tailMatch = m[6].match(/^(.*?)(?:\s*=\s*([^\s><]+))?\s*([><])?\s*$/);
+          const tokens = (tailMatch?.[1] || '').trim().split(/\s+/).filter(Boolean), tag = tailMatch?.[2] || '', marker = tailMatch?.[3] || '';
+          if (tokens.length < 4 || tokens.length > 5) throw Error(`Line ${lineNo}: S requires origin, tiles and an optional order after the file name`);
+          const part={id:`p${doc.parts.length+1}`,shape:'S',parent:stack.at(-1) || null,sourceParent:stack.at(-1) || null,sourceMarker:marker,
+            x:num(m[1],lineNo,'x offset'),y:num(m[2],lineNo,'y offset'),length:num(m[3],lineNo,'length'),rotation:numOpt(m[4],lineNo,'rotation'),width:0,color:null,
+            file:m[5],ox:Math.trunc(numOpt(tokens[0],lineNo,'origin x')),oy:Math.trunc(numOpt(tokens[1],lineNo,'origin y')),
+            tilesX:Math.max(1,Math.trunc(numOpt(tokens[2],lineNo,'tiles x',1))),tilesY:Math.max(1,Math.trunc(numOpt(tokens[3],lineNo,'tiles y',1))),
+            order:tokens.length===5?Math.trunc(numOpt(tokens[4],lineNo,'order')):0,tag,notes:pending,line:lineNo};
+          finishPart(part, marker); pending=[];
+          seenCommand=true; continue;
+        }
+        if (command === 'A') {
+          const m=rest.match(/^\s*(\S+)\s+(\S+)\s*=\s*(\S+)\s*$/);
+          if(!m) throw Error(`Line ${lineNo}: A format is "A duration mode = tag"`);
+          const duration=Math.max(1,Math.trunc(num(m[1],lineNo,'animation duration'))), mode=({OS:'OS',0:'OS',L:'L',1:'L',P:'P',2:'P'})[m[2].toUpperCase()];
+          if(!mode) throw Error(`Line ${lineNo}: mode must be OS, L, or P`);
+          if(doc.animations.some(a=>a.name===m[3])) throw Error(`Line ${lineNo}: duplicate animation "${m[3]}"`);
+          currentAnim={name:m[3],duration,mode,tracks:{},notes:pending,line:lineNo}; pending=[]; doc.animations.push(currentAnim); seenCommand=true; continue;
+        }
+        if (command === 'K') {
+          if(!currentAnim) throw Error(`Line ${lineNo}: keyframe appears before an animation`);
+          const tokens=rest.trim().split(/\s+/);
+          if(tokens.length!==5&&tokens.length!==6) throw Error(`Line ${lineNo}: K format is "K tag frame x y rotation [sprite_frame]"`);
+          const [tag]=tokens, frame=Math.max(0,Math.trunc(num(tokens[1],lineNo,'frame'))), x=num(tokens[2],lineNo,'key x'), y=num(tokens[3],lineNo,'key y'), rotation=num(tokens[4],lineNo,'key rotation'), sprite=tokens.length===6?Math.max(0,Math.trunc(numOpt(tokens[5],lineNo,'sprite frame'))):0;
+          if(!tags.has(tag)) throw Error(`Line ${lineNo}: keyframe references unknown part tag "${tag}"`);
+          const track=currentAnim.tracks[tag] ||= [];
+          const existing=track.find(k=>k.frame===frame);
+          if(existing) {existing.x=x;existing.y=y;existing.rotation=rotation;existing.sprite=sprite;existing.notes.push(...pending);}
+          else track.push({frame,x,y,rotation,sprite,notes:pending,line:lineNo,id:nextKeyframeId++});
+          track.sort((a,b)=>a.frame-b.frame); pending=[]; seenCommand=true; continue;
+        }
+        pending.push(raw);
+        diagnostics.push({line:lineNo,kind:'warn',text:`Unknown command "${match[1]}" retained`});
+      } catch(error) { diagnostics.push({line:lineNo,kind:'error',text:error.message.replace(/^Line \d+: /,'')}); pending.push(raw); }
+    }
+    if(!seenCommand) doc.leading=pending; else doc.trailing=pending;
+    doc.diagnostics=diagnostics;
+    return doc;
+  }
+  function notesText(notes) { return (notes||[]).join('\n'); }
+  function formatNum(n) { return Number.isInteger(n) ? String(n) : String(Number(n.toFixed(4))); }
+  function serializeSTK(doc) {
+    const out=[],warnings=[],fallbackNotes=doc.fallbackNotes||[],children=new Map(),flat=[],seen=new Set(),stack=[],parentOverrides=new Map();
+    if(doc.leading?.length)out.push(...doc.leading);
+    if(fallbackNotes.length)out.push(...fallbackNotes);
+    out.push(`P ${doc.fallback.join(' ')}`);
+    for(const part of doc.parts){const parent=part.parent||'';if(!children.has(parent))children.set(parent,[]);children.get(parent).push(part);}
+    const walk=part=>{if(seen.has(part.id))return;seen.add(part.id);flat.push(part);for(const child of(children.get(part.id)||[]))walk(child);};
+    for(const root of(children.get('')||[]))walk(root);
+    for(const part of doc.parts)if(!seen.has(part.id)){warnings.push(`Part "${part.tag||part.id}" is disconnected or cyclic; it is exported as a root.`);parentOverrides.set(part.id,null);walk(part);}
+    let synthetic=0;
+    for(const part of flat){
+      const parent=parentOverrides.has(part.id)?parentOverrides.get(part.id):(part.parent||null);
+      while(stack.at(-1)!==parent&&stack.length){out.push('N 0 0 0 0 <');stack.pop();synthetic++;}
+      if(stack.at(-1)!==parent&&parent){warnings.push(`Could not resolve parent for "${part.tag||part.id}"; exported as a root.`);}
+      if(part.notes?.length)out.push(...part.notes);
+      if(part.shape==='S'){
+        let sline=`S ${formatNum(part.x)} ${formatNum(part.y)} ${formatNum(part.length)} ${formatNum(part.rotation)} "${part.file||''}" ${Math.trunc(part.ox||0)} ${Math.trunc(part.oy||0)} ${Math.max(1,Math.trunc(part.tilesX||1))} ${Math.max(1,Math.trunc(part.tilesY||1))} ${Math.trunc(part.order||0)}`;
+        if(part.tag)sline+=` = ${part.tag}`;
+        const kids=(children.get(part.id)||[]).length>0,sibs=children.get(parent||'')||[];
+        const smarker=kids?'>':(!kids&&sibs.at(-1)===part&&part.parent===part.sourceParent&&part.sourceMarker==='<')?'<':'';
+        out.push(sline+smarker);
+        if(smarker==='>')stack.push(part.id);else if(smarker==='<'&&stack.length)stack.pop();
+        continue;
+      }
+      const hasOrder=part.shape!=='N'&&Math.trunc(part.order||0)!==0;
+      const colorValues=part.shape==='N'?null:(part.color||(hasOrder?doc.fallback:null));
+      const color=colorValues?` ${colorValues.join(' ')}`:'';
+      const order=hasOrder?` ${Math.trunc(part.order)}`:'';
+      let line=part.shape==='C'?`C ${formatNum(part.x)} ${formatNum(part.y)} ${formatNum(part.length)} ${formatNum(part.rotation)} ${formatNum(part.width)}${color}${order}`:part.shape==='O'?`O ${formatNum(part.x)} ${formatNum(part.y)} ${formatNum(part.length)} ${formatNum(part.rotation)}${color}${order}`:`N ${formatNum(part.x)} ${formatNum(part.y)} ${formatNum(part.length)} ${formatNum(part.rotation)}`;
+      if(part.tag)line+=` = ${part.tag}`;
+      const hasChildren=(children.get(part.id)||[]).length>0,siblings=children.get(parent||'')||[],lastSibling=siblings.at(-1)===part;
+      const preservePop=!hasChildren&&lastSibling&&part.parent===part.sourceParent&&part.sourceMarker==='<';
+      const marker=hasChildren?'>':preservePop?'<':'';
+      out.push(line+marker);
+      if(marker==='>')stack.push(part.id);else if(marker==='<'&&stack.length)stack.pop();
+    }
+    if(synthetic)warnings.push(`Export added ${synthetic} invisible N closure record${synthetic===1?'':'s'} because the .stk hierarchy syntax can pop only one parent per line.`);
+    for(const anim of doc.animations) {
+      if(anim.notes?.length)out.push(...anim.notes);
+      out.push(`A ${Math.max(1,Math.trunc(anim.duration))} ${anim.mode} = ${anim.name}`);
+      for(const part of doc.parts) {
+        if(!part.tag)continue;
+        for(const key of (anim.tracks[part.tag]||[]).slice().sort((a,b)=>a.frame-b.frame)) {
+          if(key.notes?.length)out.push(...key.notes);
+          out.push(`  K ${part.tag} ${Math.max(0,Math.trunc(key.frame))} ${formatNum(key.x)} ${formatNum(key.y)} ${formatNum(key.rotation)}${part.shape==='S'?' '+Math.max(0,Math.trunc(key.sprite||0)):''}`);
+        }
+      }
+    }
+    if(doc.trailing?.length)out.push(...doc.trailing);
+    return {text:out.join('\n')+'\n',warnings};
+  }
+  function getPart(id) { return state.doc.parts.find(p=>p.id===id)||null; }
+  function getAnim() { return state.doc.animations.find(a=>a.name===state.animation)||null; }
+  function keyFor(anim,tag,frame) { return (anim?.tracks[tag]||[]).find(k=>k.frame===frame)||null; }
+  // Sprite frame: linear interpolation between keyframes, rounded down to a whole tile index.
+  // Before the first and after the last keyframe the end value is held.
+  function spriteAt(keys,frame){
+    if(!keys.length)return 0;
+    const next=keys.findIndex(k=>k.frame>frame);
+    if(next<0)return keys.at(-1).sprite||0;
+    if(next===0)return keys[0].sprite||0;
+    const a=keys[next-1],b=keys[next],t=(frame-a.frame)/(b.frame-a.frame),sa=a.sprite||0,sb=b.sprite||0;
+    return Math.max(0,Math.floor(sa+(sb-sa)*t));
+  }
+  function poseFor(part,anim,frame) {
+    const base={x:part.x,y:part.y,rotation:part.rotation,sprite:0};
+    if(!part.tag)return base;
+    const keys=anim?.tracks[part.tag]||[], sprite=spriteAt(keys,frame);
+    const draft=state.poseDrafts[draftKey(anim?.name,part.tag,frame)];if(draft)return {sprite,...draft};
+    if(!keys.length)return base;
+    if(frame<=keys[0].frame)return {x:part.x+keys[0].x,y:part.y+keys[0].y,rotation:part.rotation+keys[0].rotation,sprite};
+    const last=keys.at(-1); if(frame>=last.frame)return {x:part.x+last.x,y:part.y+last.y,rotation:part.rotation+last.rotation,sprite};
+    let right=keys.findIndex(k=>k.frame>frame), a=keys[right-1],b=keys[right],t=(frame-a.frame)/(b.frame-a.frame);
+    let delta=((b.rotation-a.rotation+180)%360+360)%360-180;
+    return {x:part.x+a.x+(b.x-a.x)*t,y:part.y+a.y+(b.y-a.y)*t,rotation:part.rotation+a.rotation+delta*t,sprite};
+  }
+  function draftKey(animation,tag,frame){return `${animation||''}\u0000${tag}\u0000${frame}`;}
+  function setPoseDraft(part,frame,x,y,rotation,sprite=poseFor(part,getAnim(),frame).sprite){if(!part.tag||!state.animation)return;state.poseDrafts[draftKey(state.animation,part.tag,frame)]={x,y,rotation,sprite};}
+  function takePoseDraft(part,frame){if(!part.tag)return null;const key=draftKey(state.animation,part.tag,frame),pose=state.poseDrafts[key];delete state.poseDrafts[key];return pose||null;}
+  function worldMap(frame=state.frame) {
+    const map=new Map(),byId=new Map(state.doc.parts.map(part=>[part.id,part])),anim=getAnim(),visiting=new Set();
+    const resolve=id=>{
+      if(map.has(id))return map.get(id);
+      const part=byId.get(id);if(!part||visiting.has(id))return null;visiting.add(id);
+      const pose=poseFor(part,anim,frame),parent=part.parent?resolve(part.parent):null,parentRadians=(parent?.rotation||0)*Math.PI/180,parentCos=Math.cos(parentRadians),parentSin=Math.sin(parentRadians),rotation=(parent?.rotation||0)+pose.rotation,radians=rotation*Math.PI/180,x=(parent?.tipX||0)+parentCos*pose.x-parentSin*pose.y,y=(parent?.tipY||0)+parentSin*pose.x+parentCos*pose.y;
+      const result={x,y,rotation,sprite:pose.sprite,tipX:x+Math.cos(radians)*part.length,tipY:y+Math.sin(radians)*part.length};visiting.delete(id);map.set(id,result);return result;
+    };
+    for(const part of state.doc.parts)resolve(part.id);
+    return map;
+  }
+  function resizeCanvas() { const rect=canvas.getBoundingClientRect(), dpr=window.devicePixelRatio||1; canvas.width=Math.max(1,Math.round(rect.width*dpr)); canvas.height=Math.max(1,Math.round(rect.height*dpr)); ctx.setTransform(dpr,0,0,dpr,0,0); draw(); }
+  function toScreen(point) { const rect=canvas.getBoundingClientRect();return {x:rect.width/2+(point.x-state.camera.x)*state.camera.zoom,y:rect.height/2+(point.y-state.camera.y)*state.camera.zoom}; }
+  function toWorld(point) { const rect=canvas.getBoundingClientRect();return {x:(point.x-rect.width/2)/state.camera.zoom+state.camera.x,y:(point.y-rect.height/2)/state.camera.zoom+state.camera.y}; }
+  function worldToParentLocal(point,parentPose) {
+    const dx=point.x-(parentPose?.tipX||0),dy=point.y-(parentPose?.tipY||0),angle=-(parentPose?.rotation||0)*Math.PI/180,c=Math.cos(angle),s=Math.sin(angle);
+    return {x:c*dx-s*dy,y:s*dx+c*dy};
+  }
+  const spriteImages = new Map();
+  const baseName = path => String(path||'').split(/[\\/]/).pop();
+  function registerImage(file) {
+    const img = new Image();
+    img.onload = () => draw();
+    img.src = URL.createObjectURL(file);
+    spriteImages.set(file.name, img);
+  }
+  // Tile size uses integer division, matching the game.
+  function spriteMetrics(part) {
+    const img = spriteImages.get(baseName(part.file)), ready = Boolean(img && img.complete && img.naturalWidth > 0);
+    const tx = Math.max(1, part.tilesX|0), ty = Math.max(1, part.tilesY|0);
+    const tw = ready ? Math.floor(img.naturalWidth / tx) : part.length, th = ready ? Math.floor(img.naturalHeight / ty) : part.length;
+    return {img: ready ? img : null, tx, ty, tw, th, scale: tw > 0 ? part.length / tw : 1};
+  }
+  function drawSpriteBody(part, pose, outlineColor) {
+    const m = spriteMetrics(part), a = toScreen(pose), k = state.camera.zoom * m.scale, ox = part.ox||0, oy = part.oy||0;
+    if (!(k > 0)) return;
+    ctx.save();ctx.translate(a.x, a.y);ctx.rotate(pose.rotation * Math.PI / 180);ctx.scale(k, k);
+    if (m.img) {
+      const n = m.tx * m.ty, f = ((Math.trunc(pose.sprite||0) % n) + n) % n;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(m.img, (f % m.tx) * m.tw, Math.floor(f / m.tx) * m.th, m.tw, m.th, -ox, -oy, m.tw, m.th);
+    } else { ctx.fillStyle = '#ffffff14';ctx.fillRect(-ox, -oy, m.tw, m.th); }
+    const selected = outlineColor === '#f18b72';
+    if (selected || !m.img) {
+      ctx.strokeStyle = selected ? '#f18b72' : '#91a19a';ctx.lineWidth = 1.5 / k;ctx.setLineDash([4 / k, 3 / k]);ctx.strokeRect(-ox, -oy, m.tw, m.th);
+    }
+    ctx.restore();
+  }
+  function drawStickBody(part, pose, outlineColor) {
+    if(part.shape==='S')return drawSpriteBody(part, pose, outlineColor);
+    const a=toScreen(pose), b=toScreen({x:pose.tipX,y:pose.tipY}), scale=state.camera.zoom, color=part.color?hex(part.color):hex(state.doc.fallback);
+    ctx.save();ctx.strokeStyle=outlineColor;ctx.lineWidth=Math.max(1,(part.width||part.length*.58)*scale+4);ctx.lineCap='round';ctx.beginPath();
+    if(part.shape==='C'){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.strokeStyle=color;ctx.lineWidth=Math.max(1,part.width*scale);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+    else {const radius=part.length*.5*scale;ctx.fillStyle=color;ctx.strokeStyle=outlineColor;ctx.lineWidth=outlineColor==='#f18b72'?2:1.5;ctx.beginPath();ctx.arc(a.x+Math.cos(pose.rotation*Math.PI/180)*radius,a.y+Math.sin(pose.rotation*Math.PI/180)*radius,radius,0,Math.PI*2);ctx.fill();ctx.stroke();}
+    ctx.restore();
+  }
+  function draw() {
+    const rect=canvas.getBoundingClientRect(); if(!rect.width||!rect.height)return;
+    const dpr=window.devicePixelRatio||1; ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,rect.width,rect.height);
+    const center=toScreen({x:0,y:0}); ctx.save();ctx.strokeStyle='#8ba29655';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(center.x-5,center.y);ctx.lineTo(center.x+5,center.y);ctx.moveTo(center.x,center.y-5);ctx.lineTo(center.x,center.y+5);ctx.stroke();ctx.restore();
+    const poses=worldMap();
+    const drawOrder=state.doc.parts.slice().sort((a,b)=>(a.order||0)-(b.order||0));
+    for(const part of drawOrder) {
+      if(part.shape==='N'||state.selected===part.id) continue;
+      drawStickBody(part, poses.get(part.id), '#0b100e');
+    }
+    // Gizmo pass: the selected stick's highlight and handles always draw last, on top of every other stick.
+    const selected=getPart(state.selected);
+    if(selected) {
+      const pose=poses.get(selected.id), a=toScreen(pose), b=toScreen({x:pose.tipX,y:pose.tipY});
+      if(selected.shape==='N'){ctx.save();ctx.strokeStyle='#edc775';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#edc775';ctx.beginPath();ctx.arc(b.x,b.y,5,0,Math.PI*2);ctx.fill();ctx.restore();}
+      else {
+        drawStickBody(selected, pose, '#f18b72');
+        ctx.save();ctx.strokeStyle='#f18b72';ctx.lineWidth=1;ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#fff0e8';ctx.beginPath();ctx.arc(a.x,a.y,3.4,0,Math.PI*2);ctx.fill();ctx.fillStyle='#edc775';ctx.beginPath();ctx.arc(b.x,b.y,5,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#3c3321';ctx.lineWidth=1;ctx.stroke();ctx.restore();
+      }
+    }
+  }
+  function fitView() {
+    if(!state.doc.parts.length){state.camera={x:0,y:0,zoom:1};draw();return;}
+    const poses=worldMap(), points=[];
+    for(const p of state.doc.parts){const w=poses.get(p.id);points.push({x:w.x,y:w.y},{x:w.tipX,y:w.tipY});}
+    const xs=points.map(p=>p.x),ys=points.map(p=>p.y), minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),rect=canvas.getBoundingClientRect();
+    const extentX=Math.max(maxX-minX,40),extentY=Math.max(maxY-minY,40);
+    state.camera={x:(minX+maxX)/2,y:(minY+maxY)/2,zoom:Math.max(.12,Math.min(5,Math.min((rect.width-100)/extentX,(rect.height-100)/extentY)))};draw();
+  }
+  function markDirty() { state.dirty=true; }
+  function snapshot() { return JSON.stringify({doc:state.doc,selected:state.selected,animation:state.animation,frame:state.frame}); }
+  function pushHistory() {
+    if(state.historyApplying)return;
+    state.undoStack.push(snapshot());if(state.undoStack.length>100)state.undoStack.shift();state.redoStack.length=0;
+  }
+  function restoreHistory(value) {
+    const saved=JSON.parse(value);state.historyApplying=true;state.doc=saved.doc;state.selected=saved.selected;state.animation=saved.animation;state.frame=saved.frame;state.playing=false;state.dirty=true;state.historyApplying=false;renderAll();
+  }
+  function undo() { if(!state.undoStack.length)return;state.redoStack.push(snapshot());restoreHistory(state.undoStack.pop()); }
+  function redo() { if(!state.redoStack.length)return;state.undoStack.push(snapshot());restoreHistory(state.redoStack.pop()); }
+  function showDiagnostics(items) {
+    state.diagnostics=items||[];
+  }
+  function toast(text) { state.toastMessage=text;state.toastVisible=true;clearTimeout(toast.timer);toast.timer=setTimeout(()=>state.toastVisible=false,1900); }
+  function selectPart(id) { state.selected=id;draw(); }
+  function treeRows() {const children=new Map(),rows=[];for(const part of state.doc.parts){const key=part.parent||'';if(!children.has(key))children.set(key,[]);children.get(key).push(part);}const visit=(part,depth)=>{rows.push({part,depth});for(const child of(children.get(part.id)||[]))visit(child,depth+1);};for(const root of(children.get('')||[]))visit(root,0);return rows;}
+  function parentChoices() {const p=getPart(state.selected);return state.doc.parts.filter(part=>part!==p&&!isDescendant(part.id,p?.id));}
+  function selectedPart(){return getPart(state.selected);}
+  function poseValue(key) {
+    const p=selectedPart();if(!p)return undefined;
+    if((key==='x'||key==='y'||key==='rotation'||key==='sprite')&&p.tag&&getAnim())return poseFor(p,getAnim(),state.frame)[key];
+    return p[key];
+  }
+  function setPartProperty(key,input) {
+    const p=selectedPart();if(!p)return;const value=key==='tag'?String(input).trim():input;
+    if(key==='tag'&&((value&&!/^\S+$/.test(value))||(value&&state.doc.parts.some(other=>other!==p&&other.tag===value)))){toast('Tags must be unique and contain no spaces');renderAll();return;}
+    if((key==='x'||key==='y'||key==='rotation'||key==='sprite')&&p.tag&&getAnim()) {
+      const anim=getAnim(),current=poseFor(p,anim,state.frame),next=key==='sprite'?Math.max(0,Math.trunc(Number(value)||0)):Number(value);
+      if(current[key]===next)return;
+      const pose={...current,[key]:next};
+      setPoseDraft(p,state.frame,pose.x,pose.y,pose.rotation,pose.sprite);
+      setKeyframe(p,state.frame);
+      return;
+    }
+    if(String(p[key]??'')===String(value))return;pushHistory();
+    if(key==='tag'){const old=p.tag;p.tag=value;renameTrackTag(p,old,value);}
+    else if(key==='color')p.color=value.slice(1).match(/../g).map(v=>parseInt(v,16));
+    else if(key==='parent')p.parent=value||null;
+    else if(key==='shape'){p.shape=value;if(value==='S'){p.file??='';p.ox??=0;p.oy??=0;p.tilesX??=1;p.tilesY??=1;}}
+    else if(key==='file')p.file=String(value).trim().replace(/"/g,'');
+    else if(key==='tilesX'||key==='tilesY')p[key]=Math.max(1,Math.trunc(Number(value))||1);
+    else if(key==='ox'||key==='oy')p[key]=Math.trunc(Number(value))||0;
+    else if(key==='sprite')return;
+    else p[key]=Number(value);
+    markDirty();draw();
+  }
+  function duplicateSelected(){const p=selectedPart();if(p)duplicatePart(p);}
+  function removeSelected(){const p=selectedPart();if(p)removePart(p);}
+  function isDescendant(candidate,ancestor) { let current=getPart(candidate);while(current?.parent){if(current.parent===ancestor)return true;current=getPart(current.parent);}return false; }
+  function renameTrackTag(part,oldTag,newTag) {
+    if(!oldTag)return;
+    for(const anim of state.doc.animations){const keys=anim.tracks[oldTag];if(!keys)continue;delete anim.tracks[oldTag];if(newTag){anim.tracks[newTag]=[...(anim.tracks[newTag]||[]),...keys].sort((a,b)=>a.frame-b.frame);}}
+  }
+  function addPart(parent=null,shape='C') {
+    if(state.doc.parts.length>=MAX_PARTS){toast('Maximum of 64 parts');return;}
+    pushHistory();
+    const id='p'+(Date.now().toString(36))+Math.random().toString(36).slice(2,5), n=state.doc.parts.filter(p=>p.tag).length+1;
+    const p={id,shape,parent,x:0,y:0,length:shape==='O'?24:30,rotation:shape==='C'?90:0,width:shape==='C'?10:0,color:null,order:0,tag:`part_${n}`,notes:[]};state.doc.parts.push(p);state.selected=id;markDirty();renderAll();
+  }
+  function duplicatePart(p) {
+    if(state.doc.parts.length>=MAX_PARTS){toast('Maximum of 64 parts');return;}
+    pushHistory();
+    const clone={...p,id:'p'+Date.now().toString(36),x:p.x+12,y:p.y+12,tag:p.tag?`${p.tag}_copy`:'',notes:[]};let i=2,base=clone.tag;while(clone.tag&&state.doc.parts.some(x=>x.tag===clone.tag))clone.tag=base+i++;
+    state.doc.parts.splice(state.doc.parts.indexOf(p)+1,0,clone);state.selected=clone.id;markDirty();renderAll();
+  }
+  function removePart(p) {
+    pushHistory();
+    const doomed=new Set([p.id,...state.doc.parts.filter(x=>isDescendant(x.id,p.id)).map(x=>x.id)]), tags=new Set(state.doc.parts.filter(x=>doomed.has(x.id)).map(x=>x.tag).filter(Boolean));
+    if(state.selectedKey&&tags.has(state.selectedKey.tag))state.selectedKey=null;
+    state.doc.parts=state.doc.parts.filter(x=>!doomed.has(x.id));for(const a of state.doc.animations)for(const tag of tags)delete a.tracks[tag];state.selected=null;markDirty();renderAll();
+  }
+  const timelineWidth=720, frameStep=12;
+  function activeAnimation(){return getAnim();}
+  function taggedParts(){return state.doc.parts.filter(part=>part.tag);}
+  function timelineWidthPx(){return Math.max(timelineWidth,((getAnim()?.duration||1)+2)*frameStep);}
+  function timelineTicks(){const duration=Math.max(getAnim()?.duration||1,1),step=Math.max(1,Math.ceil(duration/20)),ticks=[];for(let frame=0;frame<=duration;frame+=step)ticks.push(frame);if(ticks.at(-1)!==duration)ticks.push(duration);return ticks;}
+  function timelineFootText(){const duration=getAnim()?.duration||1;return `PLAYBACK 0-${Math.max(0,duration-1)} · KEYS MAY EXTEND TO FRAME ${duration}`;}
+  function renderTimeline(){if(!state.doc.animations.length)state.doc.animations.push({name:'idle',duration:60,mode:'OS',tracks:{},notes:[]});if(!state.doc.animations.some(anim=>anim.name===state.animation))state.animation=state.doc.animations[0].name;}
+  function capturePointer(element,event){try{element.setPointerCapture(event.pointerId);}catch{}}
+  function selectAnimation(name){state.animation=name;state.frame=0;state.selectedKey=null;state.pingDirection=1;state.playing=false;draw();}
+  function newAnimation(){let base='animation',name=base,n=2;while(state.doc.animations.some(anim=>anim.name===name))name=base+(n++);pushHistory();state.doc.animations.push({name,duration:60,mode:'OS',tracks:{},notes:[]});state.animation=name;state.frame=0;markDirty();draw();}
+  function duplicateAnimation(){
+    const anim=getAnim();if(!anim)return;
+    let base=anim.name+'_copy',name=base,n=2;while(state.doc.animations.some(a=>a.name===name))name=base+(n++);
+    pushHistory();
+    // structuredClone throws on Alpine's reactive proxies; JSON round-trip clones plain data instead.
+    const clone={name,duration:anim.duration,mode:anim.mode,tracks:JSON.parse(JSON.stringify(anim.tracks)),notes:[]};
+    state.doc.animations.splice(state.doc.animations.indexOf(anim)+1,0,clone);
+    state.animation=name;state.frame=0;state.selectedKey=null;markDirty();draw();
+  }
+  function beginRenameAnimation(){const anim=getAnim();if(!anim)return;state.animationDraft=anim.name;state.renamingAnimation=true;}
+  function cancelRenameAnimation(){state.renamingAnimation=false;}
+  function commitRenameAnimation(){
+    if(!state.renamingAnimation)return;state.renamingAnimation=false;
+    const anim=getAnim();if(!anim)return;
+    const trimmed=state.animationDraft.trim();
+    if(!trimmed||trimmed===anim.name)return;
+    if(state.doc.animations.some(a=>a!==anim&&a.name===trimmed)){toast('An animation with that name already exists');return;}
+    pushHistory();
+    if(state.selectedKey?.animation===anim.name)state.selectedKey={...state.selectedKey,animation:trimmed};
+    anim.name=trimmed;state.animation=trimmed;markDirty();draw();
+  }
+  function deleteAnimation(){if(state.doc.animations.length<=1)return;pushHistory();if(state.selectedKey?.animation===state.animation)state.selectedKey=null;state.doc.animations=state.doc.animations.filter(anim=>anim.name!==state.animation);state.animation=state.doc.animations[0].name;state.frame=0;markDirty();draw();}
+  function changeDuration(input){const anim=getAnim(),value=Math.max(1,Math.min(10000,Math.trunc(Number(input)||1)));if(!anim||value===anim.duration)return;pushHistory();anim.duration=value;state.frame=Math.min(state.frame,value);markDirty();draw();}
+  function changeMode(mode){const anim=getAnim();if(!anim||anim.mode===mode)return;pushHistory();anim.mode=mode;markDirty();}
+  function stepFrame(direction){state.playing=false;state.frame=Math.max(0,Math.min(getAnim()?.duration||1,state.frame+direction));draw();}
+  function togglePlayback(){state.playing=!state.playing;state.lastTick=performance.now();}
+  function seekTo(frame,partId){state.frame=frame;if(partId)selectPart(partId);else draw();}
+  function selectKeyframe(tag,keyFrame,partId){state.selectedKey={animation:state.animation,tag,frame:keyFrame};state.frame=keyFrame;if(partId)selectPart(partId);else draw();}
+  function isSelectedKey(tag,keyFrame){return state.selectedKey?.animation===state.animation&&state.selectedKey.tag===tag&&state.selectedKey.frame===keyFrame;}
+  function deleteSelectedKey(){
+    const selection=state.selectedKey,anim=getAnim();if(!selection||!anim||selection.animation!==state.animation)return;
+    const keys=anim.tracks[selection.tag],index=keys?.findIndex(key=>key.frame===selection.frame)??-1;if(index<0){state.selectedKey=null;return;}
+    pushHistory();keys.splice(index,1);if(!keys.length)delete anim.tracks[selection.tag];state.selectedKey=null;markDirty();draw();toast(`Deleted keyframe at ${selection.frame}`);
+  }
+  function keyOnRow(tag,event){const frame=Math.max(0,frameFromClientX(event.clientX)),part=state.doc.parts.find(item=>item.tag===tag);if(part)setKeyframe(part,frame);}
+  function scrubAt(event){const content=event.currentTarget,rect=content.getBoundingClientRect(),frame=Math.round((event.clientX-rect.left-12)/frameStep);state.frame=Math.max(0,Math.min(getAnim()?.duration||1,frame));draw();}
+  function timelinePointerDown(event){if(event.target.closest('.key-dot'))return;state.timelineScrubbing=true;capturePointer(event.currentTarget,event);scrubAt(event);}
+  function timelinePointerMove(event){if(state.timelineScrubbing)scrubAt(event);}
+  function timelinePointerUp(event){state.timelineScrubbing=false;if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);}
+  function setKeyframe(part,frame) {
+    if(!part.tag){toast('Add a tag to animate this part');return;}
+    const anim=getAnim();if(!anim)return;pushHistory();
+    const pose=takePoseDraft(part,frame)||poseFor(part,anim,frame),keys=anim.tracks[part.tag]||[],existing=keys.find(k=>k.frame===frame);
+    const key={frame,x:pose.x-part.x,y:pose.y-part.y,rotation:pose.rotation-part.rotation,sprite:pose.sprite||0,notes:existing?.notes||[],id:existing?.id||nextKeyframeId++};
+    if(existing)Object.assign(existing,key);else keys.push(key);keys.sort((a,b)=>a.frame-b.frame);anim.tracks[part.tag]=keys;state.frame=frame;state.selectedKey={animation:state.animation,tag:part.tag,frame};markDirty();renderTimeline();draw();toast(`Keyframe set at ${frame}`);
+  }
+  function canSetKeyframe(){const part=getPart(state.selected);return Boolean(part?.tag&&getAnim());}
+  function setSelectedKeyframe(){const part=getPart(state.selected);if(part)setKeyframe(part,state.frame);}
+  function copySelectedKeyframe(){
+    const selection=state.selectedKey,anim=getAnim();if(!selection||!anim||selection.animation!==state.animation)return;
+    const key=keyFor(anim,selection.tag,selection.frame);if(!key)return;
+    state.keyframeClipboard={x:key.x,y:key.y,rotation:key.rotation,sprite:key.sprite||0};toast('Keyframe copied');
+  }
+  function canPasteKeyframe(){return Boolean(state.keyframeClipboard&&canSetKeyframe());}
+  function pasteKeyframe(){
+    const clip=state.keyframeClipboard,part=getPart(state.selected),anim=getAnim();if(!clip||!part?.tag||!anim)return;
+    pushHistory();
+    const frame=state.frame,keys=anim.tracks[part.tag]||[],existing=keys.find(k=>k.frame===frame);
+    const key={frame,x:clip.x,y:clip.y,rotation:clip.rotation,sprite:clip.sprite||0,notes:existing?.notes||[],id:existing?.id||nextKeyframeId++};
+    if(existing)Object.assign(existing,key);else keys.push(key);keys.sort((a,b)=>a.frame-b.frame);anim.tracks[part.tag]=keys;
+    state.selectedKey={animation:state.animation,tag:part.tag,frame};markDirty();renderTimeline();draw();toast(`Keyframe pasted at ${frame}`);
+  }
+  function frameFromClientX(clientX){const rect=timelineContent.getBoundingClientRect();return Math.round((clientX-rect.left-12)/frameStep);}
+  function keyframeDotPointerDown(event,tag,frame){
+    const part=state.doc.parts.find(p=>p.tag===tag);selectKeyframe(tag,frame,part?.id);
+    const anim=getAnim(),key=anim&&keyFor(anim,tag,frame);if(!key)return;
+    state.dragKeyframe={tag,key,historyPushed:false};capturePointer(event.currentTarget,event);
+  }
+  function keyframeDotPointerMove(event){
+    const drag=state.dragKeyframe;if(!drag)return;
+    const frame=Math.max(0,Math.min(getAnim()?.duration||1,frameFromClientX(event.clientX)));
+    if(drag.key.frame===frame)return;
+    if(!drag.historyPushed){pushHistory();drag.historyPushed=true;}
+    drag.key.frame=frame;state.frame=frame;draw();
+  }
+  function keyframeDotPointerUp(event){
+    const drag=state.dragKeyframe;state.dragKeyframe=null;
+    if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);
+    if(!drag)return;
+    if(drag.historyPushed){
+      const track=getAnim()?.tracks[drag.tag];
+      if(track){
+        const collision=track.find(k=>k!==drag.key&&k.frame===drag.key.frame);
+        if(collision){Object.assign(collision,{x:drag.key.x,y:drag.key.y,rotation:drag.key.rotation,sprite:drag.key.sprite||0});track.splice(track.indexOf(drag.key),1);state.selectedKey={animation:state.animation,tag:drag.tag,frame:collision.frame};}
+        else{track.sort((a,b)=>a.frame-b.frame);state.selectedKey={animation:state.animation,tag:drag.tag,frame:drag.key.frame};}
+      }
+      markDirty();renderTimeline();
+    }
+    draw();
+  }
+  function renderAll() {renderTimeline();draw();}
+  function pickPart(screen) {
+    const poses=worldMap();for(const p of state.doc.parts.slice().reverse()){
+      if(p.shape==='N')continue;
+      const w=poses.get(p.id),a=toScreen(w),b=toScreen({x:w.tipX,y:w.tipY});
+      if(p.shape==='S'){
+        const m=spriteMetrics(p),k=state.camera.zoom*m.scale,dx=screen.x-a.x,dy=screen.y-a.y,r=-w.rotation*Math.PI/180,c=Math.cos(r),s=Math.sin(r),tol=4/k;
+        const lx=(c*dx-s*dy)/k,ly=(s*dx+c*dy)/k,ox=p.ox||0,oy=p.oy||0;
+        if(lx>=-ox-tol&&lx<=m.tw-ox+tol&&ly>=-oy-tol&&ly<=m.th-oy+tol)return p;
+        continue;
+      }
+      if(p.shape==='O'){const radius=p.length*.5*state.camera.zoom,cx=a.x+Math.cos(w.rotation*Math.PI/180)*radius,cy=a.y+Math.sin(w.rotation*Math.PI/180)*radius;if(Math.hypot(screen.x-cx,screen.y-cy)<=radius+6)return p;continue;}
+      const dx=b.x-a.x,dy=b.y-a.y,t=Math.max(0,Math.min(1,((screen.x-a.x)*dx+(screen.y-a.y)*dy)/(dx*dx+dy*dy||1))),dist=Math.hypot(screen.x-(a.x+t*dx),screen.y-(a.y+t*dy));if(dist<=Math.max(8,p.width*state.camera.zoom*.55))return p;
+    }
+    return null;
+  }
+  function canvasPointerDown(event){
+    const r=canvas.getBoundingClientRect(),screen={x:event.clientX-r.left,y:event.clientY-r.top};
+    if(state.space||event.button===1){state.drag={type:'pan',x:screen.x,y:screen.y,cx:state.camera.x,cy:state.camera.y};capturePointer(event.currentTarget,event);return;}
+    const selected=getPart(state.selected),selectedPose=selected&&worldMap().get(selected.id),selectedTip=selectedPose&&toScreen({x:selectedPose.tipX,y:selectedPose.tipY});
+    if(selectedTip&&Math.hypot(screen.x-selectedTip.x,screen.y-selectedTip.y)<=12){const parentPose=selected.parent?worldMap().get(selected.parent):null,pose=poseFor(selected,getAnim(),state.frame);state.drag={type:'rotate',id:selected.id,base:event.shiftKey,baseRotation:selected.rotation,animationRotation:pose.rotation-selected.rotation,parentRotation:parentPose?.rotation||0,historyPushed:false};capturePointer(event.currentTarget,event);return;}
+    const part=pickPart(screen);
+    if(part){selectPart(part.id);const pointerLocal=worldToParentLocal(toWorld(screen),part.parent?worldMap().get(part.parent):null),pose=poseFor(part,getAnim(),state.frame);state.drag={type:'move',id:part.id,base:event.shiftKey,grabX:pointerLocal.x-pose.x,grabY:pointerLocal.y-pose.y,baseX:part.x,baseY:part.y,animatedX:pose.x-part.x,animatedY:pose.y-part.y,historyPushed:false};capturePointer(event.currentTarget,event);}
+    else{state.selected=null;renderAll();}
+  }
+  function canvasPointerMove(event){
+    if(!state.drag)return;
+    const r=canvas.getBoundingClientRect(),screen={x:event.clientX-r.left,y:event.clientY-r.top};
+    if(state.drag.type==='pan'){state.camera.x=state.drag.cx-(screen.x-state.drag.x)/state.camera.zoom;state.camera.y=state.drag.cy-(screen.y-state.drag.y)/state.camera.zoom;draw();return;}
+    const p=getPart(state.drag.id);if(!p)return;
+    const baseEdit=state.drag.base||!p.tag||!getAnim();
+    if(baseEdit&&!state.drag.historyPushed){pushHistory();state.drag.historyPushed=true;}
+    const world=toWorld(screen),poses=worldMap(),parentPose=p.parent?poses.get(p.parent):null,localPointer=worldToParentLocal(world,parentPose),localX=localPointer.x-(state.drag.grabX||0),localY=localPointer.y-(state.drag.grabY||0),pose=poseFor(p,getAnim(),state.frame);
+    if(state.drag.type==='rotate'){
+      const origin=poses.get(p.id),angle=Math.atan2(world.y-origin.y,world.x-origin.x)*180/Math.PI-(parentPose?.rotation||0);
+      if(baseEdit)p.rotation=angle-(state.drag.base?state.drag.animationRotation:0);else{setPoseDraft(p,state.frame,pose.x,pose.y,angle,pose.sprite);state.drag.posed=true;}
+    }else if(baseEdit){p.x=localX-state.drag.animatedX;p.y=localY-state.drag.animatedY;}
+    else{setPoseDraft(p,state.frame,localX,localY,pose.rotation,pose.sprite);state.drag.posed=true;}
+    if(baseEdit)markDirty();draw();
+  }
+  function canvasPointerUp(){
+    if(state.drag?.historyPushed)renderTimeline();
+    if(state.drag?.posed){const part=getPart(state.drag.id);if(part)setKeyframe(part,state.frame);}
+    state.drag=null;
+  }
+  function canvasWheel(event){const r=canvas.getBoundingClientRect(),at={x:event.clientX-r.left,y:event.clientY-r.top},before=toWorld(at);state.camera.zoom=Math.max(.12,Math.min(8,state.camera.zoom*(event.deltaY<0?1.12:.89)));const after=toWorld(at);state.camera.x+=before.x-after.x;state.camera.y+=before.y-after.y;draw();}
+  function zoomBy(factor){state.camera.zoom=Math.max(.12,Math.min(8,state.camera.zoom*factor));draw();}
+  function changeFallbackColor(value){pushHistory();state.doc.fallback=value.slice(1).match(/../g).map(v=>parseInt(v,16));markDirty();draw();}
+  const arrowDeltas={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
+  function nudgeSelected(key,step) {
+    const p=selectedPart();if(!p)return;
+    const [dx,dy]=arrowDeltas[key];
+    if(dx)setPartProperty('x',poseValue('x')+dx*step);
+    if(dy)setPartProperty('y',poseValue('y')+dy*step);
+  }
+  function onKeyDown(event){const editing=/INPUT|SELECT|TEXTAREA/.test(event.target.tagName);if(event.code==='Space'&&!editing){state.space=true;event.preventDefault();}if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();exportFile();}if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z'&&!editing){event.preventDefault();event.shiftKey?redo():undo();}if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='y'&&!editing){event.preventDefault();redo();}if((event.key==='Delete'||event.key==='Backspace')&&!editing){if(state.selectedKey){event.preventDefault();deleteSelectedKey();}else if(state.selected)removePart(getPart(state.selected));}if(arrowDeltas[event.key]&&!editing&&state.selected){event.preventDefault();nudgeSelected(event.key,event.shiftKey?10:1);}if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='c'&&!editing&&state.selectedKey){event.preventDefault();copySelectedKeyframe();}if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='v'&&!editing&&canPasteKeyframe()){event.preventDefault();pasteKeyframe();}}
+  function onKeyUp(event){if(event.code==='Space')state.space=false;}
+  function guardUnsaved(event){if(state.dirty){event.preventDefault();event.returnValue='';}}
+  function tick(now){if(state.playing&&now-state.lastTick>=1000/60){state.lastTick=now;const anim=getAnim();if(anim){if(anim.mode==='L')state.frame=(state.frame+1)%anim.duration;else if(anim.mode==='P'){if(anim.duration<=1)state.frame=0;else{state.frame+=state.pingDirection;if(state.frame>=anim.duration){state.frame=anim.duration-2;state.pingDirection=-1;}else if(state.frame<0){state.frame=1;state.pingDirection=1;}}}else{state.frame++;if(state.frame>=anim.duration){state.frame=anim.duration-1;state.playing=false;}}draw();}}state.animationFrameId=requestAnimationFrame(tick);}
+  function exportFile(){const result=serializeSTK(state.doc),blob=new Blob([result.text],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),anchor=document.createElement('a');anchor.href=url;anchor.download=(state.fileName.replace(/\.stk$/i,'')||'figure')+'.stk';anchor.click();URL.revokeObjectURL(url);state.dirty=false;if(result.warnings.length)showDiagnostics(result.warnings.map(text=>({kind:'warn',text})));toast('STK file exported');}
+  function resetHistory(){state.undoStack.length=0;state.redoStack.length=0;}
+  async function onFileSelected(event){const file=event.target.files?.[0];if(!file)return;loadSource(await file.text(),file.name);event.target.value='';}
+  async function onDrop(event){
+    state.dragOver=false;const files=[...(event.dataTransfer.files||[])];
+    // Register images first so the redraw after loading the .stk already shows them.
+    for(const file of files)if(file.type.startsWith('image/'))registerImage(file);
+    const doc=files.find(file=>!file.type.startsWith('image/'));if(doc)loadSource(await doc.text(),doc.name);else draw();
+  }
+  function onSpriteSelected(event){
+    const file=event.target.files?.[0],p=selectedPart();event.target.value='';
+    if(!file||p?.shape!=='S')return;
+    registerImage(file);
+    if(p.file!==file.name){pushHistory();p.file=file.name;markDirty();}
+    draw();
+  }
+  function loadSource(source,name){const doc=parseSTK(source);state.doc=doc;state.fileName=name;state.dirty=false;state.selectedKey=null;state.poseDrafts={};state.selected=doc.parts[0]?.id||null;state.animation=doc.animations[0]?.name||null;state.frame=0;state.camera={x:0,y:0,zoom:1};resetHistory();renderAll();requestAnimationFrame(fitView);showDiagnostics(doc.diagnostics);toast(`Loaded ${name}`);}
+  function newFigure(){if(state.dirty&&!confirm('Discard unsaved changes and create a new figure?'))return;state.doc=blankDocument();state.doc.parts.push({id:'p1',shape:'C',parent:null,x:0,y:0,length:48,rotation:90,width:14,color:null,tag:'root',notes:[]});state.doc.animations.push({name:'idle',duration:60,mode:'L',tracks:{},notes:[]});state.fileName='Untitled figure';state.dirty=false;state.selectedKey=null;state.poseDrafts={};state.selected='p1';state.animation='idle';state.frame=0;resetHistory();renderAll();fitView();}
+  function initializeApp(){state.doc.parts.push({id:'p1',shape:'C',parent:null,x:0,y:0,length:48,rotation:90,width:14,color:null,tag:'root',notes:[]});state.doc.animations.push({name:'idle',duration:60,mode:'L',tracks:{},notes:[]});state.selected='p1';state.animation='idle';renderAll();state.resizeObserver=new ResizeObserver(()=>resizeCanvas());state.resizeObserver.observe(canvas.parentElement);requestAnimationFrame(()=>{resizeCanvas();fitView();});state.animationFrameId=requestAnimationFrame(tick);}
+  function selfCheckOrder() {
+    const assert=(cond,msg)=>{if(!cond)throw Error('selfCheckOrder failed: '+msg);};
+    const src='P 255 255 255\nC 0 0 10 0 10 = root>\nC 0 0 10 0 10 10 20 30 5 = child<\nO 0 0 10 0\nC 0 0 10 _ 10 _ _ _ _ = placeholder\n';
+    const doc=parseSTK(src);
+    assert(doc.parts[0].order===0,'root part should default to order 0');
+    assert(doc.parts[1].order===5,'tagged child should parse order 5');
+    assert(doc.parts[2].order===0,'circle without color/order should default to order 0');
+    const placeholder=doc.parts[3];
+    assert(placeholder.rotation===0,'underscore rotation should default to 0');
+    assert(placeholder.color.every(v=>v===0),'underscore color components should default to 0');
+    assert(placeholder.order===0,'underscore order should default to 0');
+    const reparsed=parseSTK(serializeSTK(doc).text);
+    assert(reparsed.parts[1].order===5,'order must round-trip through export');
+    assert(!reparsed.diagnostics.some(d=>d.kind==='error'),'round-tripped output must parse cleanly');
+    return true;
+  }
+  function selfCheckInspectorPose() {
+    const assert=(cond,msg)=>{if(!cond)throw Error('selfCheckInspectorPose failed: '+msg);};
+    loadSource('P 255 255 255\nC 0 0 10 0 10 = arm\n','test.stk');
+    state.frame=10;
+    const baseRotation=selectedPart().rotation;
+    setPartProperty('rotation','45');
+    assert(selectedPart().rotation===baseRotation,'editing rotation in an animated frame must not touch the base rest pose');
+    const key=(getAnim().tracks['arm']||[]).find(k=>k.frame===10);
+    assert(key,'editing rotation at a frame with no keyframe must create one there');
+    assert(Math.abs(key.rotation-(45-baseRotation))<1e-9,'the keyframe must store rotation as a delta from the base pose');
+    assert(poseValue('rotation')===45,'poseValue must reflect the value just written at the current frame');
+    return true;
+  }
+  function selfCheckNudgeAndRename() {
+    const assert=(cond,msg)=>{if(!cond)throw Error('selfCheckNudgeAndRename failed: '+msg);};
+    loadSource('P 255 255 255\nC 5 5 10 0 10 = leg\n','test.stk');
+    const baseX=selectedPart().x, baseY=selectedPart().y;
+    nudgeSelected('ArrowRight',3);
+    assert(selectedPart().x===baseX,'nudging a tagged animated part must not touch the base pose');
+    assert(poseValue('x')===baseX+3,'ArrowRight should move x by +step');
+    nudgeSelected('ArrowDown',3);
+    assert(poseValue('y')===baseY+3,'ArrowDown should move y by +step');
+
+    const originalName=getAnim().name;
+    beginRenameAnimation();
+    assert(state.renamingAnimation&&state.animationDraft===originalName,'entering rename mode should draft the current name');
+    state.animationDraft='   ';
+    commitRenameAnimation();
+    assert(getAnim().name===originalName,'a blank rename must be rejected');
+    assert(!state.renamingAnimation,'committing (even a rejected one) should leave rename mode');
+    beginRenameAnimation();
+    state.animationDraft='walk';
+    commitRenameAnimation();
+    assert(getAnim().name==='walk','a valid rename must update the animation name');
+    assert(state.animation==='walk','renaming the active animation must update the selection too');
+    return true;
+  }
+  function selfCheckAnimationDuplicate() {
+    const assert=(cond,msg)=>{if(!cond)throw Error('selfCheckAnimationDuplicate failed: '+msg);};
+    loadSource('P 255 255 255\nC 0 0 10 0 10 = leg\nA 40 L = walk\nK leg 5 1 2 3\n','test.stk');
+    const before=state.doc.animations.length;
+    duplicateAnimation();
+    assert(state.doc.animations.length===before+1,'duplicateAnimation should add one animation');
+    const clone=getAnim();
+    assert(clone.name==='walk_copy','the clone should get a derived unique name');
+    assert(state.animation===clone.name,'duplicating should switch to the new animation');
+    const original=state.doc.animations.find(a=>a.name==='walk');
+    assert(JSON.stringify(clone.tracks.leg)===JSON.stringify(original.tracks.leg),'the clone must start with identical keyframes');
+    clone.tracks.leg[0].x=999;
+    assert(original.tracks.leg[0].x!==999,'the clone must be a deep copy, not sharing keyframe objects with the original');
+    return true;
+  }
+  function selfCheckKeyframeOps() {
+    const assert=(cond,msg)=>{if(!cond)throw Error('selfCheckKeyframeOps failed: '+msg);};
+    const src='P 255 255 255\nC 0 0 10 0 10 = leg\nA 40 L = walk\nK leg 5 1 2 3\n';
+
+    loadSource(src,'test.stk');
+    state.selectedKey={animation:'walk',tag:'leg',frame:5};
+    copySelectedKeyframe();
+    assert(state.keyframeClipboard&&state.keyframeClipboard.x===1&&state.keyframeClipboard.rotation===3,'copy should snapshot the keyframe delta values');
+    state.frame=15;
+    pasteKeyframe();
+    const pasted=keyFor(getAnim(),'leg',15);
+    assert(pasted&&pasted.x===1&&pasted.y===2&&pasted.rotation===3,'paste should create a keyframe with the copied values at the current frame');
+
+    loadSource(src+'K leg 20 4 5 6\n','test2.stk');
+    const rectLeft=timelineContent.getBoundingClientRect().left;
+    const fakeEvent=(frame)=>({currentTarget:{setPointerCapture(){},hasPointerCapture:()=>true,releasePointerCapture(){}},pointerId:1,clientX:rectLeft+frame*frameStep+12});
+    keyframeDotPointerDown(fakeEvent(5),'leg',5);
+    keyframeDotPointerMove(fakeEvent(10));
+    keyframeDotPointerUp(fakeEvent(10));
+    assert(!keyFor(getAnim(),'leg',5),'dragging a keyframe away must remove it from its original frame');
+    const moved=keyFor(getAnim(),'leg',10);
+    assert(moved&&moved.x===1&&moved.rotation===3,'dragging a keyframe must preserve its pose values at the new frame');
+
+    keyframeDotPointerDown(fakeEvent(10),'leg',10);
+    keyframeDotPointerMove(fakeEvent(20));
+    keyframeDotPointerUp(fakeEvent(20));
+    const target=keyFor(getAnim(),'leg',20);
+    assert(target&&target.x===1&&target.rotation===3,'dropping a keyframe onto an existing one should replace it with the dragged values');
+    assert((getAnim().tracks.leg||[]).length===1,'dropping onto an existing keyframe must merge, not duplicate, entries');
+
+    // A double-click on an existing dot fires with event.target set to that tiny button, so
+    // event.offsetX (relative to the button) must not be used for the frame; only clientX is
+    // reliable regardless of which element inside the row was actually clicked.
+    keyOnRow('leg',{offsetX:3,clientX:rectLeft+20*frameStep+12});
+    assert((getAnim().tracks.leg||[]).length===1,'double-clicking an existing keyframe dot must not spawn a ghost keyframe nearby');
+    assert(keyFor(getAnim(),'leg',20),'double-clicking a dot must still resolve to the frame it visually sits on');
+    return true;
+  }
+  function selfCheckCanvasPoseCommit() {
+    const assert=(cond,msg)=>{if(!cond)throw Error('selfCheckCanvasPoseCommit failed: '+msg);};
+    loadSource('P 255 255 255\nC 0 0 10 0 10 = arm\nA 40 L = walk\nK arm 0 0 0 0\nK arm 20 10 0 0\n','test.stk');
+    state.frame=10;
+    const part=selectedPart(), before=poseFor(part,getAnim(),10).x, rect=canvas.getBoundingClientRect();
+    const screen=toScreen({x:before+5,y:0});
+    state.drag={type:'move',id:part.id,base:false,grabX:0,grabY:0,baseX:part.x,baseY:part.y,animatedX:0,animatedY:0,historyPushed:false};
+    canvasPointerMove({clientX:rect.left+screen.x,clientY:rect.top+screen.y});
+    assert(!keyFor(getAnim(),'arm',10),'a pose drag still in progress must not commit a keyframe');
+    const undoDepth=state.undoStack.length;
+    canvasPointerUp();
+    const key=keyFor(getAnim(),'arm',10);
+    assert(key,'releasing a canvas pose drag on an animated part must commit a keyframe at the current frame, the way editing the inspector fields already does');
+    assert(Math.abs(poseFor(part,getAnim(),10).x-(before+5))<0.5,'the committed keyframe must reflect the dragged pose, not silently revert to the interpolated value');
+    assert(state.undoStack.length>undoDepth,'a committed canvas pose drag must be undoable');
+    return true;
+  }
+  function selfCheckSprite() {
+    const assert=(cond,msg)=>{if(!cond)throw Error('selfCheckSprite failed: '+msg);};
+    const src='P 255 255 255\nS 1 2 30 45 "a/b.png" 4 5 3 2 7 = spr\nA 40 L = walk\nK spr 0 0 0 0 1\nK spr 10 0 0 0 4\nK spr 20 0 0 0\n';
+    const doc=parseSTK(src);
+    assert(!doc.diagnostics.some(d=>d.kind==='error'),'S/K lines must parse without errors');
+    const part=doc.parts[0];
+    assert(part.shape==='S'&&part.file==='a/b.png'&&part.ox===4&&part.oy===5&&part.tilesX===3&&part.tilesY===2&&part.order===7,'S fields must parse');
+    loadSource(src,'test.stk');
+    const p=selectedPart(),anim=getAnim();
+    assert(poseFor(p,anim,0).sprite===1&&poseFor(p,anim,5).sprite===2&&poseFor(p,anim,9).sprite===3,'sprite frame must be interpolated and rounded down between keyframes');
+    assert(poseFor(p,anim,10).sprite===4&&poseFor(p,anim,15).sprite===2,'interpolation must reach each keyframe value exactly');
+    assert(poseFor(p,anim,30).sprite===0,'the last keyframe value is held; a K line without a sprite frame defaults to 0');
+    assert(worldMap(10).get(p.id).sprite===4,'worldMap poses must carry the sprite frame used by the canvas');
+    state.frame=12;setPartProperty('sprite','9');
+    assert(keyFor(getAnim(),'spr',12)?.sprite===9,'editing the sprite frame must create a keyframe holding that frame');
+    assert(poseFor(p,getAnim(),12).x===p.x,'a sprite-only keyframe must not move the part');
+    const text=serializeSTK(state.doc).text;
+    assert(/^S 1 2 30 45 "a\/b.png" 4 5 3 2 7 = spr$/m.test(text),'S line must round-trip');
+    assert(/^  K spr 12 0 0 0 9$/m.test(text),'K lines of sprite parts must export the sprite frame');
+    const again=parseSTK(text);
+    assert(!again.diagnostics.some(d=>d.kind==='error'),'exported text must parse cleanly');
+    assert(keyFor(again.animations[0],'spr',12)?.sprite===9,'sprite frame must survive a round trip');
+    return true;
+  }
+  window.STKWorkshop={selfCheckSprite,parseSTK,serializeSTK,worldMap,poseFor,get state(){return state;},setKeyframe,selfCheckOrder,selfCheckInspectorPose,selfCheckNudgeAndRename,selfCheckAnimationDuplicate,selfCheckKeyframeOps,selfCheckCanvasPoseCommit};
+  document.addEventListener('alpine:init',()=>{
+    Alpine.data('stkEditor',()=>({
+      ...state,
+      init(){state=this;initializeApp();},
+      destroy(){if(state.animationFrameId)cancelAnimationFrame(state.animationFrameId);state.resizeObserver?.disconnect();},
+      hex(value){return hex(value);},formatNum(value){return formatNum(value);},
+      treeRows(){return treeRows();},selectPart(id){selectPart(id);},selectedPart(){return selectedPart();},parentChoices(){return parentChoices();},
+      setPartProperty(key,value){setPartProperty(key,value);},poseValue(key){return poseValue(key);},duplicateSelected(){duplicateSelected();},removeSelected(){removeSelected();},
+      addPart(parent){addPart(parent);},changeFallbackColor(event){changeFallbackColor(event.target.value);},
+      activeAnimation(){return activeAnimation();},taggedParts(){return taggedParts();},timelineWidthPx(){return timelineWidthPx();},timelineTicks(){return timelineTicks();},timelineFootText(){return timelineFootText();},isSelectedKey(tag,keyFrame){return isSelectedKey(tag,keyFrame);},hasSelectedKey(){return Boolean(state.selectedKey);},
+      selectAnimation(name){selectAnimation(name);},newAnimation(){newAnimation();},duplicateAnimation(){duplicateAnimation();},beginRenameAnimation(){beginRenameAnimation();},commitRenameAnimation(){commitRenameAnimation();},cancelRenameAnimation(){cancelRenameAnimation();},deleteAnimation(){deleteAnimation();},changeDuration(value){changeDuration(value);},changeMode(mode){changeMode(mode);},stepFrame(direction){stepFrame(direction);},togglePlayback(){togglePlayback();},seekTo(frame,id){seekTo(frame,id);},selectKeyframe(tag,frame,id){selectKeyframe(tag,frame,id);},deleteSelectedKey(){deleteSelectedKey();},copySelectedKeyframe(){copySelectedKeyframe();},pasteKeyframe(){pasteKeyframe();},canPasteKeyframe(){return canPasteKeyframe();},canSetKeyframe(){return canSetKeyframe();},setSelectedKeyframe(){setSelectedKeyframe();},keyOnRow(tag,event){keyOnRow(tag,event);},
+      keyframeDotPointerDown(event,tag,frame){keyframeDotPointerDown(event,tag,frame);},keyframeDotPointerMove(event){keyframeDotPointerMove(event);},keyframeDotPointerUp(event){keyframeDotPointerUp(event);},
+      timelinePointerDown(event){timelinePointerDown(event);},timelinePointerMove(event){timelinePointerMove(event);},timelinePointerUp(event){timelinePointerUp(event);},
+      canvasPointerDown(event){canvasPointerDown(event);},canvasPointerMove(event){canvasPointerMove(event);},canvasPointerUp(){canvasPointerUp();},canvasWheel(event){canvasWheel(event);},zoomBy(factor){zoomBy(factor);},fitView(){fitView();},
+      undo(){undo();},redo(){redo();},exportFile(){exportFile();},newFigure(){newFigure();},onFileSelected(event){onFileSelected(event);},onSpriteSelected(event){onSpriteSelected(event);},onDrop(event){onDrop(event);},onKeyDown(event){onKeyDown(event);},onKeyUp(event){onKeyUp(event);},guardUnsaved(event){guardUnsaved(event);},resizeCanvas(){resizeCanvas();}
+    }));
+  });
+})();
+</script>
+</body>
+</html>

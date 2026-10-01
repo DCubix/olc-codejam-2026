@@ -1,0 +1,6 @@
+# S x y len rot file_name ox oy tiles_x tiles_y [order] = tag (Sprite stick, draws an image)
+P 232 242 235
+S 0 0 24 0 "duck.png" 16 16 1 1 0 = part_1
+A 60 L = idle
+  K part_1 0 0 0 -90 0
+

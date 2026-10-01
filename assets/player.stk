@@ -1,0 +1,132 @@
+# For stick figure definition:
+# ========================================================================
+# C x y len rot width [r g b] [order] = tag
+# O x y diam rot [r g b] [order] = tag
+# N x y len rot = tag
+# P r g b is for defining the global color fallback
+# S x y len rot file_name ox oy tiles_x tiles_y = tag (Sprite stick, draws an image)
+# (> means make a new child)
+# (< means we pop the current parent and go back to the previous parent)
+# Child x/y offsets are local to the parent and rotate with its world rotation.
+
+# underscore (_) means that a parameter is skipped and the default value is used.
+
+# For animations:
+# ========================================================================
+# You have to define a stick tag for each part of
+# the body you want to animate.
+# The tag is used to identify the part in the animation file.
+# ========================================================================
+# A duration_frames mode = tag (this creates an animation and makes it current)
+# mode = OS/0 for one shot, L/1 for loop, P/2 for ping pong
+# K tag frame_no x y rot [sprite_frame] (this creates a keyframe for the current animation)
+
+P 255 255 255
+C 0 0 10 -90 28 = root>
+C 0 0 10 0 10 255 255 255 -10 = neck>
+O 0 0 28 0 = head<
+C 3 -16 15 194 10 255 255 255 5 = left_arm>
+S 0 0 38 90 "gun6.png" -2 17 1 1 0 = weapon
+N 0 0 0 0 <
+C 3 16 15 166 10 255 255 255 -6 = right_arm
+C -22 -7 15 180 10 255 255 255 2 = left_leg
+C -22 7 15 180 10 255 255 255 -5 = right_leg
+
+# ------------------------------------------------------------------------
+# IDLE - slow breathing bob + head tilt. The head is the biggest single
+# shape on this figure, so it carries most of the readable motion; arms
+# and legs just drift a little underneath it.
+# Ping-pong: only the first half needs keys, playback auto-reverses.
+# ------------------------------------------------------------------------
+A 50 P = idle
+  K root 0 0 0 7.307
+  K root 50 0 1.8164 7.307
+  K head 0 0 0 -7.7453
+  K head 50 0 0 -10.6842
+  K left_arm 0 -1 3 -60
+  K left_arm 50 -1 3 -60
+  K right_arm 0 1 -9 -40
+  K right_arm 50 1 -9 -40
+  K left_leg 0 0.1401 1.0926 7.5564
+  K left_leg 50 1.1168 0.9105 17.9519
+  K right_leg 0 2.5169 3.7495 -8.2862
+  K right_leg 50 5.0165 3.3153 -8.2862
+  K weapon 0 -13.1512 2.1179 -140.4001 0
+A 12 OS = shoot
+  K root 0 0 0 7.307
+  K root 2 0.1802 0 -2.2911
+  K root 11 0 0 7.307
+  K head 0 0 0 -7.7453
+  K head 2 0.18 0.0072 3.8244
+  K head 11 0 0 -7.7453
+  K left_arm 0 -1 3 -60
+  K left_arm 2 -0.3374 -0.0392 -79.3328
+  K left_arm 11 -1 3 -60
+  K right_arm 0 1 -9 -40
+  K right_arm 2 0.1574 -10.4764 -51.7286
+  K right_arm 11 1 -9 -40
+  K left_leg 0 0.1401 1.0926 7.5564
+  K left_leg 2 1.7389 -2.8108 8.0821
+  K left_leg 11 0.1401 1.0926 7.5564
+  K right_leg 0 2.5169 3.7495 -8.2862
+  K right_leg 2 1.7103 1.3729 -4.016
+  K right_leg 11 2.5169 3.7495 -8.2862
+  K weapon 0 -13.1512 2.1179 -140.4001 0
+A 40 L = run
+  K root 0 -0.1802 -3 5
+  K root 10 0.1802 0.1802 5
+  K root 20 0 -3 5
+  K root 30 0 0 5
+  K root 40 0 -3 5
+  K head 0 0 0 -7.6299
+  K left_arm 0 -0.0225 3.8108 -58.5037
+  K left_arm 13 -2.0225 1.8108 -58.5037
+  K left_arm 20 -0.6225 0.8108 -58.5037
+  K left_arm 23 -0.0225 1.8108 -58.5037
+  K left_arm 33 -2.0225 1.8108 -58.5037
+  K left_arm 40 -1.0225 3.8108 -58.5037
+  K right_arm 0 -0.2153 -10.6634 -43.0352
+  K right_arm 13 -2.2153 -8.6634 -43.0352
+  K right_arm 20 -0.8153 -7.6634 -43.0352
+  K right_arm 23 -0.2153 -8.6634 -43.0352
+  K right_arm 33 -2.2153 -8.6634 -43.0352
+  K right_arm 40 -0.9887 -10.1406 -43.0352
+  K left_leg 0 2.187 0.1493 36.6667
+  K left_leg 8 2.432 8.7377 39.5462
+  K left_leg 10 2.9027 10.3968 28.0811
+  K left_leg 20 3.679 17.2022 -34.881
+  K left_leg 30 1.1076 10.5538 -9.7421
+  K left_leg 40 2.3351 -0.2254 34.5002
+  K right_leg 0 4.3469 3.741 -36.5308
+  K right_leg 10 1.6432 -2.3532 -8.538
+  K right_leg 20 2.5341 -14.9118 33.1538
+  K right_leg 26 1.7559 -7.6809 43.1773
+  K right_leg 30 1.2371 -2.8603 34.6527
+  K right_leg 40 3.4023 3.281 -35.5323
+  K weapon 0 -13.1512 2.1179 -140.4001 0
+A 12 OS = jump
+  K root 0 0 0 5
+  K root 5 0 2 12
+  K root 9 0 0 2.2231
+  K head 0 0 0 -3.6385
+  K head 5 0 0 4.0137
+  K head 9 0 0 -3.0208
+  K left_arm 0 -1 3 -60
+  K left_arm 9 -1 3 -60
+  K right_arm 0 1 -9.1802 -32
+  K right_arm 5 1 -9.1802 -32
+  K right_arm 9 1 -9.1802 -32
+  K left_leg 0 0.1401 1.0926 7.5564
+  K left_leg 5 2.2311 5.5779 16.4206
+  K left_leg 9 1.0527 -0.8725 27.623
+  K right_leg 0 2.6956 3.7266 -8.2862
+  K right_leg 5 6.0382 6.4749 -12.5229
+  K right_leg 9 0.9824 0.5463 1.2579
+  K weapon 0 -13.1512 2.1179 -140.4001 0
+
+
+
+
+
+
+

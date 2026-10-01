@@ -1,0 +1,7 @@
+P 232 242 235
+N 0 0 2 90 = root>
+O 0 0 4 90 6 157 23 = ball
+A 60 L = idle
+  K root 0 0 0 -90
+  K ball 0 0 0 90
+
