@@ -6,6 +6,7 @@
 
 #include "../logic.h"
 #include "../difficulty.hpp"
+#include "../repository.h"
 
 #include "entities/player.h"
 #include "entities/swarmer.h"
@@ -14,6 +15,7 @@
 #include "hud/combodisplay.h"
 #include "hud/weaponshuffler.h"
 #include "hud/damagedisplay.h"
+#include "hud/statsdisplay.h"
 
 #include "utilities/olcUTIL3_Geometry2D.h"
 namespace g2d = olc::utils::geom2d;
@@ -42,16 +44,57 @@ public:
     GlobalGameData& GameData() { return *m_pGlobalData.get(); }
 
 public:
+
     bool OnCreate(olc::PixelGameEngine* pge) override
-    {   
+    {
+        /**
+uniform vec2 pgeTargetSizeInPixels;			// Size of the target olc::Image in pixels
+uniform vec2 pgeInverseTargetSizeInPixels;  // 1.0 / Size of the target olc::Image in pixels
+uniform float pgeTotalTimeElapsed;			// Total time elapsed since application started
+uniform sampler2D pgeTexture0;				// Current source olc::Image bound as texture0
+uniform sampler2D pgeTexture1;				// Current source olc::Image bound as texture1
+uniform sampler2D pgeTexture2;				// Current source olc::Image bound as texture2
+uniform sampler2D pgeTexture3;				// Current source olc::Image bound as texture3
+
+// Inputs from Vertex Shader
+in vec2 oTex;
+in vec4 oCol;
+         **/
+
+        // FX
+        fxRedVignetteShader.SetVertexShaderSource(
+            olc::gpu::Shader_GLSL33::VS_DefaultHeader() +
+            olc::gpu::Shader_GLSL33::VS_DefaultMain()
+            );
+        fxRedVignetteShader.SetPixelShaderSource(
+            olc::gpu::Shader_GLSL33::PS_DefaultHeader() + R"(
+            uniform float uIntensity;
+            void main() {
+                vec2 uv = gl_FragCoord.xy * pgeInverseTargetSizeInPixels;
+                uv *= 1.0 - uv.yx;
+
+                float vig = uv.x * uv.y * 15.0;
+                vig = 1.0 - pow(vig, clamp(uIntensity, 0.0, 1.0));
+
+                pixel = vec4(vig, 0.0, 0.0, 1.0);
+            })"
+            );
+        if (fxRedVignetteShader.Compile() != "OK") return false;
+        fxRedVignetteShader.CreateUniform("uIntensity");
+
+        pge->CreateImage(fxRedVignetteTex, pge->ScreenSize());
+
+        return false;
+    }
+
+    bool OnEnterMode(olc::PixelGameEngine* pge) override
+    {
         m_pGlobalData = std::make_shared<GlobalGameData>();
 
         auto player = Add<Player>(this);
 
         comboDisplay.data = m_pGlobalData.get();
         comboDisplay.params = &Params();
-        weaponShuffler.params = &Params();
-        damageDisplay.params = &Params();
         comboDisplay.onExpire = [this]() {
             auto& gd = *m_pGlobalData;
             gd.hits = 0;
@@ -59,17 +102,38 @@ public:
             gd.moveSpeedMultiplier = 0;
             gd.scoreMultiplier = 1;
             weaponShuffler.RequestStop();
+
+            // timed out (not "combo lost" by damage): clear the damage counter and its HUD
+            if (auto p = Get<Player>(); p && p->damageCounter < Params().damageHitsToLoseCombo) {
+                p->damageCounter = 0;
+                damageDisplay.Hide();
+            }
         };
 
+        weaponShuffler.params = &Params();
         weaponShuffler.onSwap = [this]() {
+            // no swap once the combo is over
+            if (!comboDisplay.Active()) return false;
             if (auto p = Get<Player>()) {
                 p->SwapWeapon();
                 weaponShuffler.selectedWeapon = p->weapon;
             }
-            return m_pGlobalData->combo > 0;
+            return true;
         };
 
+        player->onDeath = [this]() {
+            weaponShuffler.RequestStop();
+            comboDisplay.Reset();
+        };
+
+        paused = false;
+
         damageDisplay.player = player;
+        damageDisplay.params = &Params();
+
+        statsDisplay.player = player;
+        statsDisplay.params = &Params();
+        statsDisplay.data = m_pGlobalData.get();
 
         // Lights
         const float lightMargin = 2.0f * kTile;
@@ -92,52 +156,33 @@ public:
         // Light that follows player
         Light playerLight;
         playerLight.pos = player->position;
-        playerLight.radius = 300.0f;
+        playerLight.radius = 180.0f;
         playerLight.color = olc::PixelF(1.0f, 0.7f, 0.0f, 1.0f);
         lights.push_back(playerLight);
 
-        /**
-uniform vec2 pgeTargetSizeInPixels;			// Size of the target olc::Image in pixels
-uniform vec2 pgeInverseTargetSizeInPixels;  // 1.0 / Size of the target olc::Image in pixels
-uniform float pgeTotalTimeElapsed;			// Total time elapsed since application started
-uniform sampler2D pgeTexture0;				// Current source olc::Image bound as texture0
-uniform sampler2D pgeTexture1;				// Current source olc::Image bound as texture1
-uniform sampler2D pgeTexture2;				// Current source olc::Image bound as texture2
-uniform sampler2D pgeTexture3;				// Current source olc::Image bound as texture3
+        return false;
+    }
 
-// Inputs from Vertex Shader
-in vec2 oTex;
-in vec4 oCol;
-         **/
-
-        // FX
-        fxRedVignetteShader.SetVertexShaderSource(
-            olc::gpu::Shader_GLSL33::VS_DefaultHeader() +
-            olc::gpu::Shader_GLSL33::VS_DefaultMain()
-        );
-        fxRedVignetteShader.SetPixelShaderSource(
-            olc::gpu::Shader_GLSL33::PS_DefaultHeader() + R"(
-            uniform float uIntensity;
-            void main() {
-                vec2 uv = gl_FragCoord.xy * pgeInverseTargetSizeInPixels;
-                uv *= 1.0 - uv.yx;
-
-                float vig = uv.x * uv.y * 15.0;
-                vig = 1.0 - pow(vig, clamp(uIntensity, 0.0, 1.0));
-
-                pixel = vec4(vig, 0.0, 0.0, 1.0);
-            })"
-        );
-        if (fxRedVignetteShader.Compile() != "OK") return false;
-        fxRedVignetteShader.CreateUniform("uIntensity");
-
-        pge->CreateImage(fxRedVignetteTex, pge->ScreenSize());
-
+    bool OnExitMode(olc::PixelGameEngine* pge) override
+    {
+        // free all
+        SetPaused(false);
+        entities.clear();
+        entityQueue.clear();
+        lights.clear();
+        m_pGlobalData.reset();
         return false;
     }
 
     PlayState OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime) override
     {
+        auto& keys = pge->GetKeyboard();
+        if (keys.GetKey(olc::Key::ESCAPE).bPressed || keys.GetKey(olc::Key::P).bPressed) {
+            SetPaused(!paused);
+        }
+        // everything runs with dt = 0 while paused, so the scene is drawn frozen
+        if (paused) fElapsedTime = 0.0f;
+
         // Add queued entities
         for (auto& e : entityQueue) {
             entities.push_back(std::move(e));
@@ -166,11 +211,18 @@ in vec4 oCol;
             if (timer >= Params().spawnInterval * float(100 - spawnCut) / 100.0f) {
                 timer = 0.0f;
 
+                constexpr olc::vf2d spawnLocations[] = {
+                    // 4 floor corners
+                    {kFloorMin.x + kTile*2, kFloorMin.y + kTile*2},
+                    {kFloorMax.x - kTile*2, kFloorMin.y + kTile*2},
+                    {kFloorMin.x + kTile*2, kFloorMax.y - kTile*2},
+                    {kFloorMax.x - kTile*2, kFloorMax.y - kTile*2}
+                };
+
                 float randomAngle = RandomF(-pi, pi);
                 // sx = either -spawnDistanceX or +spawnDistanceX
-                float sx = RandomF(-1.0f, 1.0f) < 0.0f ? -Params().spawnDistanceX : Params().spawnDistanceX;
-                float sy = RandomF(-1.0f, 1.0f) * Params().spawnRangeY;
-                olc::vf2d pos = olc::vf2d{sx, sy} + player->position;
+                int corner = RandomI(0, 3);
+                olc::vf2d pos = spawnLocations[corner];
 
                 auto playerSize = player->figure.Size();
 
@@ -200,7 +252,7 @@ in vec4 oCol;
 
         // Update camera
         auto diff = player->position - camera;
-        camera += diff * fElapsedTime * 3.0f;
+        camera += diff * std::min(fElapsedTime * 3.0f, 1.0f);
 
         auto cameraPos = camera - pge->ScreenSize() / 2.0f;
         DrawFloor(pge, cameraPos - cameraShaker);
@@ -247,6 +299,16 @@ in vec4 oCol;
         comboDisplay.Update(pge, fElapsedTime);
         weaponShuffler.Update(pge, fElapsedTime);
         damageDisplay.Update(pge, fElapsedTime);
+        statsDisplay.Update(pge, fElapsedTime);
+
+        if (paused) {
+            auto size = draw.GetTargetSize();
+            draw.FilledRect({0, 0}, size, olc::PixelF(0.0f, 0.0f, 0.0f, 0.6f));
+            const std::string title = "PAUSED", hint = "Esc or P to resume";
+            auto ts = draw.GetTextSize(title, true), hs = draw.GetTextSize(hint, true);
+            draw.StringProp({ size.x / 2.0f - ts.x / 2.0f, size.y / 2.0f - ts.y }, title, olc::Colour::WHITE);
+            draw.StringProp({ size.x / 2.0f - hs.x / 2.0f, size.y / 2.0f + 4.0f }, hint, olc::Colour::GREY);
+        }
 
         // FX
         if (player->health <= Params().playerCriticalHealth) {
@@ -265,6 +327,11 @@ in vec4 oCol;
             draw.SetBlendMode(olc::BlendMode::Additive);
             draw.Image(fxRedVignetteTex.all(), {0,0});
             draw.SetBlendMode(olc::BlendMode::Alpha);
+
+            // play heart beat sound when pulsating
+            if (intensity > 0.0f && pulsating < 0.01f) {
+                SRG("assets/sounds/heartbeat.wav")->Play(false, 0.5f, 0.0f, RandomF(0.9f, 1.1f));
+            }
         }
 
         // move light to player
@@ -286,16 +353,6 @@ in vec4 oCol;
         // );
 
         return PlayState::IN_GAME;
-    }
-
-    bool OnEnterMode(olc::PixelGameEngine* pge) override
-    {
-        return false;
-    }
-
-    bool OnExitMode(olc::PixelGameEngine* pge) override
-    {
-        return false;
     }
 
     // Draws floor.png as 32x32 world tiles on a ground plane tilted around X.
@@ -380,6 +437,16 @@ in vec4 oCol;
         return GetEntityCount<T>() + GetEntityCount<U, Rest...>();
     }
 
+    // Stops (or resumes) all audio too, so overlapping one-shots freeze with the scene.
+    void SetPaused(bool value)
+    {
+        if (paused == value) return;
+        paused = value;
+        auto& engine = SoundRepository::Get().Audio().GetEngine();
+        if (paused) ma_engine_stop(&engine);
+        else ma_engine_start(&engine);
+    }
+
     void AwardScore(int amt = 5)
     {
         auto& gd = *m_pGlobalData.get();
@@ -390,6 +457,7 @@ in vec4 oCol;
         ShakeCamera(3.5f);
 
         if (gd.hits % Params().comboEveryNHits != 0) return;
+        if (Get<Player>()->IsDead()) return;
 
         gd.combo++;
 
@@ -397,6 +465,11 @@ in vec4 oCol;
             comboDisplay.Bump();
             weaponShuffler.Resume();
             if (gd.combo == 2) weaponShuffler.ResetTimer();
+
+            constexpr float comboPitches[] = { 0.6f, 0.8f, 1.0f, 1.2f, 1.4f };
+            float pitch = comboPitches[std::min(gd.combo - 2, 4)];
+
+            SRG("assets/sounds/combo.wav")->Play(false, 0.5f, 0.0f, pitch);
 
             gd.fireRateMultiplier += Params().fireRateStepPerCombo;
             gd.moveSpeedMultiplier += Params().moveSpeedStepPerCombo;
@@ -455,10 +528,12 @@ in vec4 oCol;
     std::vector<std::unique_ptr<Entity>> entityQueue;
 
     float timer{0.0f};
+    bool paused{false};
 
     ComboDisplay comboDisplay;
     WeaponShuffler weaponShuffler;
     DamageDisplay damageDisplay;
+    StatsDisplay statsDisplay;
 
     olc::vf2d cameraShaker{0.0f, 0.0f}, camera{0.0f, 0.0f};
 

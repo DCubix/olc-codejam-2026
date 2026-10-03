@@ -5,8 +5,6 @@
 
 #include "../../utils.hpp"
 
-#define IRG(x) ImageRepository::Get().GetSprite(x)
-
 constexpr float gPlayerAimMaxAngle = 45.0f;
 
 Player::Player(InGameState *game) : game(game)
@@ -28,8 +26,9 @@ void Player::OnCreate(olc::PixelGameEngine* pge)
 
     for (auto& w : gWeapons) {
         if (w.bulletAsset || w.equipAsset) continue;
-        w.equipAsset = IRG(w.equipAssetPath);
-        w.bulletAsset = IRG(w.bulletAssetPath);
+        w.equipAsset = IRG("assets/sprites/" + w.equipAssetPath);
+        w.bulletAsset = IRG("assets/sprites/" + w.bulletAssetPath);
+        w.soundAsset = SRG("assets/sounds/" + w.soundAssetPath);
     }
 }
 
@@ -98,7 +97,7 @@ void Player::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
 
         const float halfAngle = Deg2Rad(w.spread) / 2.0f;
         float angleFactor = w.numProjectiles > 1
-            ? ((float(bulletNo) / float(w.numProjectiles)) * 2.0f - 1.0f) * halfAngle
+            ? ((float(bulletNo) / float(w.numProjectiles - 1)) * 2.0f - 1.0f) * halfAngle
             : RandomF(-halfAngle, halfAngle);
 
         olc::vf2d direction = RotateVector(olc::vf2d{ bulletFacing, 0.0f }, angleFactor + aimAngle * bulletFacing);
@@ -110,12 +109,16 @@ void Player::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
         bullet->gravity = w.gravity;
         bullet->floorY = int(position.y);
         bullet->colliderRadius = w.collisionRadius;
+
+        if (w.soundAsset) {
+            w.soundAsset->Play(false, 0.4f / w.numProjectiles, 0.0f, RandomF(0.9f, 1.1f));
+        }
     };
 
     const auto& w = gWeapons[weapon];
-    if (mouse.GetButton(0).bHeld && !IsDead()) {
-        shootTimer += fElapsedTime;
-
+    // the timer always runs, so separate clicks fire as soon as the cooldown has passed
+    shootTimer += fElapsedTime;
+    if ((mouse.GetButton(0).bHeld || mouse.GetButton(0).bPressed) && !IsDead() && !game->paused) {
         const auto& gd = game->GameData();
         float fireRateMult = float(100 - gd.fireRateMultiplier) / 100.0f;
 
@@ -175,11 +178,11 @@ void Player::TakeDamage(int value)
     m_damageColorTimer = 0.25f;
     m_healthRechargeTimer = 0.0f;
 
-    if (game->GameData().combo > 0) {
+    if (game->comboDisplay.Active()) {
         game->damageDisplay.Bump();
         if (++damageCounter >= game->Params().damageHitsToLoseCombo) {
-            game->comboDisplay.Reset();
             game->damageDisplay.Reset();
+            game->comboDisplay.Reset();
         }
     }
 
@@ -188,5 +191,8 @@ void Player::TakeDamage(int value)
         figure.PlayAnimation("death");
         game->ShakeCamera(4.0f);
         if (onDeath) onDeath();
+        SRG("assets/sounds/player-death.wav")->Play(false, 0.5f, 0.0f, RandomF(0.8f, 1.1f));
+    } else {
+        SRG("assets/sounds/punch.wav")->Play(false, 0.5f, 0.0f, RandomF(0.8f, 1.1f));
     }
 }

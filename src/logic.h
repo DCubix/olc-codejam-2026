@@ -2,7 +2,7 @@
 
 #include "utilities/olcUTIL3_GameMode.h"
 
-constexpr float gHUDPadding = 32.0f;
+constexpr float gHUDPadding = 40.0f;
 
 int NextTypeId();
 
@@ -12,7 +12,7 @@ int TypeIdOf() { static const int id = NextTypeId(); return id; }
 class Entity {
 public:
     Entity() = default;
-    ~Entity() = default;
+    virtual ~Entity() = default;
 
     virtual int TypeId() const = 0;
 

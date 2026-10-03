@@ -17,6 +17,9 @@ public:
     // Called when the players takes damage, or when the timer runs out.
     void Reset();
 
+    // True while a combo of 2 or more is shown and not already ending.
+    bool Active() const { return m_visible && !m_exiting; }
+
     GlobalGameData* data{nullptr};
     const DifficultyParams* params{&GetDifficulty(Difficulty::NORMAL)};
     std::function<void()> onExpire;

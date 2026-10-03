@@ -59,8 +59,8 @@ struct DifficultyParams {
 inline constexpr DifficultyParams gDifficulties[] = {
     // EASY
     {
-        .playerMaxHealth = 1500,
-        .playerCriticalHealth = 300,
+        .playerMaxHealth = 1000,
+        .playerCriticalHealth = 200,
         .playerMoveSpeed = 150.0f,
         .playerRegenInterval = 0.5f,
         .damageHitsToLoseCombo = 5,
@@ -74,20 +74,20 @@ inline constexpr DifficultyParams gDifficulties[] = {
         .scoreStepPerCombo = 1,
         .maxScoreMultiplier = 100,
 
-        .swapCountdownMin = 20.0f,
-        .swapCountdownMax = 30.0f,
-        .shuffleLeadTime = 6.0f,
+        .swapCountdownMin = 14.0f,
+        .swapCountdownMax = 22.0f,
+        .shuffleLeadTime = 5.0f,
         .shuffleHoldTime = 3.0f,
 
         .chaseDistance = 600.0f,
         .attackDistance = 40.0f,
 
         .swarmerSpeed = 50.0f,
-        .swarmerDamage = 1,
+        .swarmerDamage = 2,
         .swarmerScore = 5,
 
         .tankSpeed = 30.0f,
-        .tankDamage = 1,
+        .tankDamage = 4,
         .tankHealth = 2,
         .tankScore = 10,
 
@@ -100,10 +100,10 @@ inline constexpr DifficultyParams gDifficulties[] = {
     },
     // NORMAL
     {
-        .playerMaxHealth = 1000,
-        .playerCriticalHealth = 250,
+        .playerMaxHealth = 700,
+        .playerCriticalHealth = 175,
         .playerMoveSpeed = 140.0f,
-        .playerRegenInterval = 1.0f,
+        .playerRegenInterval = 0.25f,
         .damageHitsToLoseCombo = 3,
 
         .comboEveryNHits = 3,
@@ -115,20 +115,20 @@ inline constexpr DifficultyParams gDifficulties[] = {
         .scoreStepPerCombo = 2,
         .maxScoreMultiplier = 100,
 
-        .swapCountdownMin = 15.0f,
-        .swapCountdownMax = 25.0f,
-        .shuffleLeadTime = 6.0f,
-        .shuffleHoldTime = 3.0f,
+        .swapCountdownMin = 10.0f,
+        .swapCountdownMax = 16.0f,
+        .shuffleLeadTime = 5.0f,
+        .shuffleHoldTime = 2.5f,
 
         .chaseDistance = 600.0f,
         .attackDistance = 40.0f,
 
         .swarmerSpeed = 60.0f,
-        .swarmerDamage = 1,
+        .swarmerDamage = 3,
         .swarmerScore = 5,
 
         .tankSpeed = 40.0f,
-        .tankDamage = 1,
+        .tankDamage = 5,
         .tankHealth = 3,
         .tankScore = 10,
 
@@ -141,8 +141,8 @@ inline constexpr DifficultyParams gDifficulties[] = {
     },
     // HARD
     {
-        .playerMaxHealth = 600,
-        .playerCriticalHealth = 200,
+        .playerMaxHealth = 400,
+        .playerCriticalHealth = 125,
         .playerMoveSpeed = 130.0f,
         .playerRegenInterval = 2.0f,
         .damageHitsToLoseCombo = 2,
@@ -156,20 +156,20 @@ inline constexpr DifficultyParams gDifficulties[] = {
         .scoreStepPerCombo = 3,
         .maxScoreMultiplier = 100,
 
-        .swapCountdownMin = 10.0f,
-        .swapCountdownMax = 20.0f,
-        .shuffleLeadTime = 5.0f,
+        .swapCountdownMin = 6.0f,
+        .swapCountdownMax = 12.0f,
+        .shuffleLeadTime = 4.0f,
         .shuffleHoldTime = 2.0f,
 
         .chaseDistance = 650.0f,
         .attackDistance = 40.0f,
 
         .swarmerSpeed = 75.0f,
-        .swarmerDamage = 2,
+        .swarmerDamage = 4,
         .swarmerScore = 5,
 
         .tankSpeed = 50.0f,
-        .tankDamage = 3,
+        .tankDamage = 6,
         .tankHealth = 5,
         .tankScore = 15,
 

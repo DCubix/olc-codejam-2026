@@ -1,6 +1,7 @@
 #include "bullet.h"
 
 #include "../../utils.hpp"
+#include "../../repository.h"
 
 #include <numbers>
 
@@ -39,4 +40,11 @@ void PlayerBullet::OnUpdate(olc::PixelGameEngine *pge, float fElapsedTime)
     draw.WorldRotate(angle);
     figure.Draw(draw, fElapsedTime);
     draw.SetWorldTransform(tmp);
+}
+
+void PlayerBullet::HitSomething()
+{
+    spent = true;
+    Destroy();
+    SRG("assets/sounds/bullet-hit.wav")->Play(false, 0.2f, 0.0f, RandomF(0.8f, 1.2f));
 }

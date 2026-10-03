@@ -4,12 +4,15 @@
 
 #include "../entities/player.h"
 
-void WeaponShuffler::OnShow() {}
+void WeaponShuffler::OnShow() {
+    SRG("assets/sounds/hint.wav")->Play(false, 0.7f);
+}
 
 void WeaponShuffler::OnHide()
 {
     m_state = State::IDLE;
     m_stopping = false;
+    SRG("assets/sounds/hint.wav")->Play(false, 0.7f, 0.0f, 0.4f);
 }
 
 void WeaponShuffler::RequestStop()
@@ -51,6 +54,7 @@ void WeaponShuffler::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
         break;
     case State::SHUFFLE:
         if (timer <= 0.0f) {
+            SRG("assets/sounds/bam.wav")->Play(false, 0.75f);
             if (onSwap && onSwap()) ResetTimer();
             else m_stopping = true;
             SetState(State::HOLD);
@@ -93,6 +97,11 @@ void WeaponShuffler::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
         if (m_state == State::SHUFFLE) {
             float t = std::fmodf(timer, 0.25f) / 0.25f;
             weapon = std::min(uint32_t(t * float(weaponCount)), weaponCount - 1);
+            // at every change, play a shuffle
+            if (weapon != m_lastWeapon) {
+                SRG("assets/sounds/weapon-shuffle.wav")->Play(false, 0.6f, 0.0f, RandomF(0.8f, 1.1f));
+                m_lastWeapon = weapon;
+            }
         }
         const auto& w = gWeapons[weapon];
         const auto& weaponAsset = w.equipAsset;

@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <string>
 
+#include "../../repository.h"
+
 void ComboDisplay::OnShow()
 {
     m_tweens.Animate(&m_textOff.y)
@@ -27,9 +29,14 @@ void ComboDisplay::Bump()
 
 void ComboDisplay::Reset()
 {
+    if (m_exiting) return;
     m_timer = 0.0f;
     m_exiting = true;
     if (onExpire) onExpire();
+
+    if (data->combo > 0 && m_visible) {
+        SRG("assets/sounds/combo-lose.wav")->Play(false, 0.6f, 0.0f);
+    }
 
     m_tweens.Animate(&m_textOff.y)
         .From(0.0f).To(15.0f).For(0.4f)
@@ -47,7 +54,7 @@ void ComboDisplay::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
     m_tweens.Update(fElapsedTime);
 
     m_timer = std::max(m_timer - fElapsedTime, 0.0f);
-    if (!m_exiting && m_timer <= 0.0f && data->combo > 0) {
+    if (Active() && m_timer <= 0.0f && data->combo > 0) {
         Reset();
     }
 

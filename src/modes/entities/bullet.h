@@ -13,6 +13,11 @@ public:
     void OnCreate(olc::PixelGameEngine* pge) override;
     void OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime) override;
 
+    void HitSomething();
+
+    // set on the first hit, so one bullet cannot hit several enemies
+    bool spent{false};
+
     olc::vf2d direction{};
     float speed{400.0f};
     int damage{10};

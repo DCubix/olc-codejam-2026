@@ -19,7 +19,7 @@ public:
     void Bump();
     void Reset();
 
-    Player* player;
+    Player* player{nullptr};
     const DifficultyParams* params{&GetDifficulty(Difficulty::NORMAL)};
 
     std::function<void()> onExpire;

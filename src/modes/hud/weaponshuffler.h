@@ -51,4 +51,6 @@ protected:
     const float m_slideTime{0.5f};
 
     TweenAnimator m_tweens;
+
+    int m_lastWeapon{0};
 };

@@ -4,7 +4,6 @@
 
 #include "array.hpp"
 #include <map>
-#include <filesystem>
 
 constexpr size_t gMaxSticksPerFigure = 64;
 
@@ -109,42 +108,4 @@ private:
         std::optional<olc::Pixel> colorOverride = std::nullopt,
         std::optional<olc::Pixel> light = std::nullopt
     );
-};
-
-class FigureRepository {
-public:
-    std::optional<Figure> GetFigure(const std::string& name);
-
-    static FigureRepository& Get();
-
-private:
-    std::map<std::string, Figure> m_figures;
-
-    void LoadFigure(const std::string& name);
-
-    static std::unique_ptr<FigureRepository> s_instance;
-};
-
-class ImageRepository {
-public:
-    olc::Image* GetImage(
-        const std::string& name,
-        const olc::vi2d& origin = olc::vi2d{},
-        int tilesX = 1, int tilesY = 1
-    );
-    Sprite* GetSprite(const std::string& name);
-    void LoadImage(
-        const std::string& name,
-        const olc::vi2d& origin = olc::vi2d{},
-        int tilesX = 1, int tilesY = 1
-    );
-
-    static ImageRepository& Get(olc::PixelGameEngine* pge = nullptr);
-private:
-    olc::PixelGameEngine* m_pge{ nullptr };
-    std::map<std::string, olc::Image> m_images;
-    std::map<std::string, Sprite> m_sprites;
-
-
-    static std::unique_ptr<ImageRepository> s_instance;
 };

@@ -12,11 +12,11 @@ void DamageDisplay::OnUpdate(olc::PixelGameEngine *pge, float fElapsedTime)
 {
     auto& draw = pge->GetDraw();
 
-    m_blinkTimer -= fElapsedTime;
+    m_blinkTimer = std::max(m_blinkTimer - fElapsedTime, 0.0f);
 
     float flashTime = std::fmodf(m_blinkTimer, 0.15f) / 0.15f;
     float flashValue = std::sinf(flashTime * pi * 2.0f);
-    auto color = flashValue > 0.0f ? olc::Colour::WHITE : olc::Colour::RED;
+    auto color = (m_blinkTimer > 0.0f && flashValue > 0.0f) ? olc::Colour::WHITE : olc::Colour::RED;
 
     auto fnDrawBlock = [&](olc::vf2d pos, bool lit, olc::Pixel color, float width) {
         draw.Rect(
@@ -70,6 +70,7 @@ void DamageDisplay::Bump()
 
 void DamageDisplay::Reset()
 {
+    if (m_exiting) return;
     m_exiting = true;
     if (onExpire) onExpire();
 
