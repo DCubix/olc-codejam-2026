@@ -5,6 +5,7 @@
 #include "../tween.h"
 
 #include "../logic.h"
+#include "../difficulty.hpp"
 
 #include "entities/player.h"
 #include "entities/swarmer.h"
@@ -26,13 +27,17 @@ constexpr olc::vf2d kFloorMin{-kFloorMax.x, -kFloorMax.y};
 
 class InGameState : public GameMode {
 public:
-    InGameState() = default;
+    InGameState(Difficulty difficulty = Difficulty::NORMAL) : difficulty(difficulty) {}
     ~InGameState() = default;
 
-    InGameState(std::shared_ptr<GlobalGameData> pGlobalData) : GameMode(pGlobalData)
+    InGameState(std::shared_ptr<GlobalGameData> pGlobalData, Difficulty difficulty = Difficulty::NORMAL)
+        : GameMode(pGlobalData), difficulty(difficulty)
     {
 
     }
+
+    Difficulty difficulty;
+    const DifficultyParams& Params() const { return GetDifficulty(difficulty); }
 
     GlobalGameData& GameData() { return *m_pGlobalData.get(); }
 
@@ -44,6 +49,9 @@ public:
         auto player = Add<Player>(this);
 
         comboDisplay.data = m_pGlobalData.get();
+        comboDisplay.params = &Params();
+        weaponShuffler.params = &Params();
+        damageDisplay.params = &Params();
         comboDisplay.onExpire = [this]() {
             auto& gd = *m_pGlobalData;
             gd.hits = 0;
@@ -72,8 +80,21 @@ public:
                 RandomF(kFloorMin.y + lightMargin, kFloorMax.y - lightMargin)
             };
             l.radius = RandomF(80.0f, 300.0f);
+            l.color = olc::PixelF(
+                RandomF(0.5f, 1.0f),
+                RandomF(0.5f, 1.0f),
+                RandomF(0.0f, 0.1f),
+                1.0f
+            );
             lights.push_back(l);
         }
+
+        // Light that follows player
+        Light playerLight;
+        playerLight.pos = player->position;
+        playerLight.radius = 300.0f;
+        playerLight.color = olc::PixelF(1.0f, 0.7f, 0.0f, 1.0f);
+        lights.push_back(playerLight);
 
         /**
 uniform vec2 pgeTargetSizeInPixels;			// Size of the target olc::Image in pixels
@@ -128,35 +149,34 @@ in vec4 oCol;
 
         longTimer += fElapsedTime;
 
+#ifndef NDEBUG
         // DEBUG
         if (pge->GetKeyboard().GetKey(olc::Key::K1).bPressed) { // simulate countdown at 5 seconds
             weaponShuffler.timer = 5.0f;
             weaponShuffler.Resume();
         }
         //
+#endif
 
-        int swarmers = 0;
-        ForEachEntityOfType<Swarmer>([&](Swarmer& s) {
-            swarmers++;
-        });
-
-        if (swarmers < 50) {
+        int enemies = GetEntityCount<Swarmer, Tank>();
+        if (enemies < Params().maxSwarmers) {
             timer += fElapsedTime;
-            if (timer >= 0.4f) {
+            int spawnCut = std::clamp(std::max(0, m_pGlobalData->combo - 1) * Params().spawnRateStepPerCombo,
+                                      0, Params().maxFireRateMultiplier);
+            if (timer >= Params().spawnInterval * float(100 - spawnCut) / 100.0f) {
                 timer = 0.0f;
 
                 float randomAngle = RandomF(-pi, pi);
-                // sx = either -600.0f or 600.0f
-                float sx = RandomF(-1.0f, 1.0f) < 0.0f ? -600.0f : 600.0f;
-                float sy = RandomF(-1.0f, 1.0f) * 400.0f;
+                // sx = either -spawnDistanceX or +spawnDistanceX
+                float sx = RandomF(-1.0f, 1.0f) < 0.0f ? -Params().spawnDistanceX : Params().spawnDistanceX;
+                float sy = RandomF(-1.0f, 1.0f) * Params().spawnRangeY;
                 olc::vf2d pos = olc::vf2d{sx, sy} + player->position;
 
                 auto playerSize = player->figure.Size();
 
-                // 15% chance of spawning a tank
                 float chance = RandomF(0.0f, 1.0f);
 
-                if (chance < 0.15f) {
+                if (chance < Params().tankChance) {
                     auto t = Add<Tank>(this);
                     t->position = pos;
                 } else {
@@ -229,12 +249,12 @@ in vec4 oCol;
         damageDisplay.Update(pge, fElapsedTime);
 
         // FX
-        if (player->health <= gCriticalPlayerHealth) {
+        if (player->health <= Params().playerCriticalHealth) {
             draw.SetTarget(fxRedVignetteTex);
             draw.Clear(olc::Colour::BLACK);
             draw.SetShader(fxRedVignetteShader);
 
-            float intensity = float(gCriticalPlayerHealth - player->health) / float(gCriticalPlayerHealth);
+            float intensity = float(Params().playerCriticalHealth - player->health) / float(Params().playerCriticalHealth);
             float pulsating = (0.5f + 0.5f * std::sin(longTimer * 6.0f)) * 0.15f;
             draw.SetShaderUniform("uIntensity", intensity + pulsating);
             draw.FilledRect({0,0}, pge->ScreenSize());
@@ -247,6 +267,8 @@ in vec4 oCol;
             draw.SetBlendMode(olc::BlendMode::Alpha);
         }
 
+        // move light to player
+        lights.back().pos = player->position;
 
         // show GD stats (debug)
         // draw.StringProp(
@@ -296,15 +318,7 @@ in vec4 oCol;
                 (scale - kFar) / (1.0f - kFar) * screen.y
             };
         };
-        auto light = [&](float wx, float wy) {
-            float f = 0.0f;
-            for (const auto& l : lights) {
-                const float k = std::clamp(1.0f - (olc::vf2d{wx, wy} - l.pos).mag() / l.radius, 0.0f, 1.0f);
-                f += k * k;
-            }
-            const float m = std::min(1.0f, kAmbient + (1.0f - kAmbient) * f);
-            return olc::Pixel(uint8_t(255 * m), uint8_t(255 * m), uint8_t(255 * m));
-        };
+        auto light = [&](float wx, float wy) { return GetLightContributionAt({wx, wy}); };
 
         const int tx0 = std::max(-kFloorTiles.x / 2, int(std::floor((cx - screen.x / 2.0f / kFar) / kTile)));
         const int tx1 = std::min(kFloorTiles.x / 2, int(std::ceil((cx + screen.x / 2.0f / kFar) / kTile)));
@@ -350,6 +364,22 @@ in vec4 oCol;
             if (e->TypeId() == id) callback(*static_cast<T*>(e.get()));
     }
 
+    template <typename T>
+    uint32_t GetEntityCount()
+    {
+        const int id = TypeIdOf<T>();
+        uint32_t count = 0;
+        for (auto& e : entities)
+            if (e->TypeId() == id) count++;
+        return count;
+    }
+
+    template <typename T, typename U, typename... Rest>
+    uint32_t GetEntityCount()
+    {
+        return GetEntityCount<T>() + GetEntityCount<U, Rest...>();
+    }
+
     void AwardScore(int amt = 5)
     {
         auto& gd = *m_pGlobalData.get();
@@ -359,7 +389,7 @@ in vec4 oCol;
 
         ShakeCamera(3.5f);
 
-        if (gd.hits % gComboEveryNHits != 0) return;
+        if (gd.hits % Params().comboEveryNHits != 0) return;
 
         gd.combo++;
 
@@ -368,13 +398,13 @@ in vec4 oCol;
             weaponShuffler.Resume();
             if (gd.combo == 2) weaponShuffler.ResetTimer();
 
-            gd.fireRateMultiplier += gFireRateStepUpPerCombo;
-            gd.moveSpeedMultiplier += gMoveSpeedMultiplierStepUpPerCombo;
-            gd.scoreMultiplier += gScoreMultiplierStepUpPerCombo;
+            gd.fireRateMultiplier += Params().fireRateStepPerCombo;
+            gd.moveSpeedMultiplier += Params().moveSpeedStepPerCombo;
+            gd.scoreMultiplier += Params().scoreStepPerCombo;
 
-            gd.fireRateMultiplier = std::clamp(gd.fireRateMultiplier, 0, gMaxFireRateMultiplier);
-            gd.moveSpeedMultiplier = std::clamp(gd.moveSpeedMultiplier, 0, 100);
-            gd.scoreMultiplier = std::clamp(gd.scoreMultiplier, 1, 100);
+            gd.fireRateMultiplier = std::clamp(gd.fireRateMultiplier, 0, Params().maxFireRateMultiplier);
+            gd.moveSpeedMultiplier = std::clamp(gd.moveSpeedMultiplier, 0, Params().maxMoveSpeedMultiplier);
+            gd.scoreMultiplier = std::clamp(gd.scoreMultiplier, 1, Params().maxScoreMultiplier);
         }
     }
 
@@ -397,20 +427,27 @@ in vec4 oCol;
             .Then().From(v3).To(olc::vf2d{}).For(0.1f).Start();
     }
 
+    // Ambient plus each light's color weighted by a squared falloff, per channel.
     olc::Pixel GetLightContributionAt(const olc::vf2d& pos)
     {
-        float f = 0.0f;
+        float r = 0.0f, g = 0.0f, b = 0.0f;
         for (const auto& l : lights) {
             const float k = std::clamp(1.0f - (pos - l.pos).mag() / l.radius, 0.0f, 1.0f);
-            f += k * k;
+            const float w = k * k / 255.0f;
+            r += w * l.color.r;
+            g += w * l.color.g;
+            b += w * l.color.b;
         }
-        const float m = std::min(1.0f, kAmbient + (1.0f - kAmbient) * f);
-        return olc::Pixel(uint8_t(255 * m), uint8_t(255 * m), uint8_t(255 * m));
+        auto channel = [](float f) {
+            return uint8_t(255 * std::min(1.0f, kAmbient + (1.0f - kAmbient) * f));
+        };
+        return olc::Pixel(channel(r), channel(g), channel(b));
     }
 
     struct Light {
         olc::vf2d pos;
         float radius;
+        olc::Pixel color;
     };
     std::vector<Light> lights;
 

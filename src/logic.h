@@ -2,15 +2,6 @@
 
 #include "utilities/olcUTIL3_GameMode.h"
 
-constexpr int gFireRateStepUpPerCombo = 5;
-constexpr int gMaxFireRateMultiplier = 70;
-constexpr int gScoreMultiplierStepUpPerCombo = 2;
-constexpr int gMoveSpeedMultiplierStepUpPerCombo = 2;
-constexpr int gComboEveryNHits = 3;
-
-constexpr float gMinDistanceChase = 500.0f;
-constexpr float gMinDistanceAttack = 40.0f;
-
 constexpr float gHUDPadding = 32.0f;
 
 int NextTypeId();

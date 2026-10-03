@@ -29,7 +29,7 @@ public:
     Figure figure;
     InGameState* game;
 
-    int health{ 3 };
+    int health{ 0 }; // set from difficulty in the constructor
 
 private:
     float m_damageColorTimer{0.0f};

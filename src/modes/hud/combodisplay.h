@@ -3,9 +3,8 @@
 #include <functional>
 
 #include "../../logic.h"
+#include "../../difficulty.hpp"
 #include "../../tween.h"
-
-constexpr float gComboResetTimer = 3.0f;
 
 class ComboDisplay : public HUDElement {
 public:
@@ -19,7 +18,7 @@ public:
     void Reset();
 
     GlobalGameData* data{nullptr};
-    // Called once when the timer runs out, before the exit animation.
+    const DifficultyParams* params{&GetDifficulty(Difficulty::NORMAL)};
     std::function<void()> onExpire;
 
 protected:

@@ -171,7 +171,14 @@ void Figure::DrawStick(olc::Draw &draw, StickID sid, std::optional<olc::Pixel> c
     }
 }
 
-void Figure::Draw(olc::Draw &draw, float fElapsedTime, bool flipX, std::optional<olc::Pixel> colorOverride, std::optional<olc::Pixel> light)
+void Figure::Draw(
+    olc::Draw &draw,
+    float fElapsedTime,
+    bool flipX,
+    std::optional<olc::Pixel> colorOverride,
+    std::optional<olc::Pixel> light,
+    std::function<void()> preDraw
+)
 {
     auto fnLerpAngle = [](float start, float end, float t) {
         constexpr float PI = std::numbers::pi_v<float>;
@@ -279,6 +286,8 @@ void Figure::Draw(olc::Draw &draw, float fElapsedTime, bool flipX, std::optional
             }
         }
     }
+
+    if (preDraw) preDraw();
 
     std::vector<StickID> orderedSticks;
     orderedSticks.reserve(m_sticks.Size());

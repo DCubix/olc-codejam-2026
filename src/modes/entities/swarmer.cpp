@@ -28,8 +28,8 @@ void Swarmer::OnUpdate(olc::PixelGameEngine *pge, float fElapsedTime)
     auto renderPos = position - olc::vf2d{0.0f, size.y/2.6f};
 
     auto hitBox = g2d::rect<float>{
-        { renderPos.x - colliderRadius, renderPos.y - colliderRadius*1.25f },
-        { colliderRadius*2.0f, colliderRadius*2.5f }
+        { renderPos.x - colliderRadius, renderPos.y - colliderRadius*1.4f },
+        { colliderRadius*2.0f, colliderRadius*2.8f }
     };
 
     switch (state) {
@@ -38,28 +38,28 @@ void Swarmer::OnUpdate(olc::PixelGameEngine *pge, float fElapsedTime)
             state = State::IDLE;
             break;
         case State::IDLE: {
-            if (targetVec.mag() < gMinDistanceChase) {
+            if (targetVec.mag() < game->Params().chaseDistance) {
                 figure.PlayAnimation("walk");
                 state = State::CHASING;
             }
         } break;
         case State::CHASING: {
-            if (targetVec.mag() > gMinDistanceChase) {
+            if (targetVec.mag() > game->Params().chaseDistance) {
                 state = State::TO_IDLE;
-            } else if (targetVec.mag() <= gMinDistanceAttack) {
+            } else if (targetVec.mag() <= game->Params().attackDistance) {
                 figure.PlayAnimation("attack");
                 state = State::ATTACK;
             }
-            position += dirToTarget * fElapsedTime * 60.0f;
+            position += dirToTarget * fElapsedTime * game->Params().swarmerSpeed;
         } break;
         case State::ATTACK: {
-            if (figure.IsAnimationFinished("attack") && targetVec.mag() > gMinDistanceAttack) {
+            if (figure.IsAnimationFinished("attack") && targetVec.mag() > game->Params().attackDistance) {
                 figure.PlayAnimation("walk");
                 state = State::CHASING;
             }
 
             const bool onHitFrame = figure.GetCurrentFrame("attack") == 9;
-            if (onHitFrame && !m_hasHit) target->TakeDamage(1);
+            if (onHitFrame && !m_hasHit) target->TakeDamage(game->Params().swarmerDamage);
             m_hasHit = onHitFrame;
         } break;
         case State::DEAD: {
@@ -80,7 +80,7 @@ void Swarmer::OnUpdate(olc::PixelGameEngine *pge, float fElapsedTime)
             b.Destroy();
             state = State::DEAD;
             figure.PlayAnimation("death");
-            game->AwardScore();
+            game->AwardScore(game->Params().swarmerScore);
         }
     });
 

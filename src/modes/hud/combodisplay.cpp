@@ -13,7 +13,7 @@ void ComboDisplay::OnShow()
 
 void ComboDisplay::Bump()
 {
-    m_timer = gComboResetTimer;
+    m_timer = params->comboResetTimer;
 
     if (!IsVisible()) {
         Show();
@@ -68,7 +68,7 @@ void ComboDisplay::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
     );
     draw.FilledRect(
         { size.x - (kComboBarWidth + gHUDPadding), pos.y + sz.y + 4.0f + m_textOff.y },
-        { 80.0f * (m_timer / gComboResetTimer), 5.0f },
+        { 80.0f * (m_timer / params->comboResetTimer), 5.0f },
         olc::Colour::TANGERINE
     );
     draw.Rect(

@@ -7,6 +7,8 @@
 
 #define IRG(x) ImageRepository::Get().GetSprite(x)
 
+constexpr float gPlayerAimMaxAngle = 45.0f;
+
 Player::Player(InGameState *game) : game(game)
 {
     auto fig = FigureRepository::Get().GetFigure("assets/player.stk");
@@ -14,7 +16,10 @@ Player::Player(InGameState *game) : game(game)
         figure = *fig;
         colliderRadius = figure.Size().x / 3.0f;
     }
-    mass = 70.0f;
+    mass = 80.0f;
+    health = game->Params().playerMaxHealth;
+
+    m_baseLeftArmAngle = figure.GetStick(figure.GetStickID("left_arm"))->rotation;
 }
 
 void Player::OnCreate(olc::PixelGameEngine* pge)
@@ -38,6 +43,7 @@ void Player::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
     auto dir = (mp - position).norm();
 
     olc::vf2d moveDir{0.0f, 0.0f};
+    float aimAngle = 0.0f;
 
     if (!IsDead()) {
         m_flipX = dir.x < 0.0f;
@@ -60,14 +66,22 @@ void Player::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
         float moveSpeedMult = 1.0f + float(game->GameData().moveSpeedMultiplier) / 100.0f;
 
         if (moveDir.mag2() > 0.0f)
-            position += moveDir.norm() * fElapsedTime * 140.0f * moveSpeedMult;
+            position += moveDir.norm() * fElapsedTime * game->Params().playerMoveSpeed * moveSpeedMult;
         else figure.PlayAnimation("idle");
 
         m_healthRechargeTimer += fElapsedTime;
-        if (m_healthRechargeTimer >= 1.0f) {
+        if (m_healthRechargeTimer >= game->Params().playerRegenInterval) {
             m_healthRechargeTimer = 0.0f;
-            health = std::min(health + 1, gPlayerMaxHealth);
+            health = std::min(health + 1, game->Params().playerMaxHealth);
         }
+
+        const float minAngle = -Deg2Rad(gPlayerAimMaxAngle + 20.0f);
+        const float maxAngle = Deg2Rad(gPlayerAimMaxAngle - 35.0f);
+        aimAngle = std::clamp(
+            // the figure is drawn mirrored when flipped, so aim in its local (unmirrored) space
+            std::atan2(dir.y, std::abs(dir.x)),
+            minAngle, maxAngle
+        ) + Deg2Rad(20.0f);
     }
 
     auto size = figure.Size();
@@ -87,7 +101,7 @@ void Player::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
             ? ((float(bulletNo) / float(w.numProjectiles)) * 2.0f - 1.0f) * halfAngle
             : RandomF(-halfAngle, halfAngle);
 
-        olc::vf2d direction = RotateVector(olc::vf2d{ bulletFacing, 0.0f }, angleFactor);
+        olc::vf2d direction = RotateVector(olc::vf2d{ bulletFacing, 0.0f }, angleFactor + aimAngle * bulletFacing);
 
         bullet->position = pos;
         bullet->direction = direction;
@@ -131,9 +145,18 @@ void Player::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
 
     auto light = game->GetLightContributionAt(position);
 
+    auto fnPreDrawAim = [&]() {
+        if (IsDead()) return;
+        auto leftArm = figure.GetStick(figure.GetStickID("left_arm"));
+        if (!leftArm) return;
+
+        // aim is added on top of the pose; animatedRotation is applied separately by Figure::Draw
+        leftArm->rotation = m_baseLeftArmAngle + aimAngle;
+    };
+
     auto tmp = draw.GetWorldTransform();
     draw.WorldOffset(renderPos);
-    figure.Draw(draw, fElapsedTime, m_flipX, color, light);
+    figure.Draw(draw, fElapsedTime, m_flipX, color, light, fnPreDrawAim);
     draw.SetWorldTransform(tmp);
 }
 
@@ -154,7 +177,7 @@ void Player::TakeDamage(int value)
 
     if (game->GameData().combo > 0) {
         game->damageDisplay.Bump();
-        if (++damageCounter >= 3) {
+        if (++damageCounter >= game->Params().damageHitsToLoseCombo) {
             game->comboDisplay.Reset();
             game->damageDisplay.Reset();
         }

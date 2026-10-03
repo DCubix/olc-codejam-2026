@@ -14,6 +14,7 @@ Tank::Tank(InGameState *game) : game(game)
         colliderRadius = figure.Size().x / 3.4f;
     }
     mass = 12.0f;
+    health = game->Params().tankHealth;
 }
 
 void Tank::OnUpdate(olc::PixelGameEngine *pge, float fElapsedTime)
@@ -39,28 +40,28 @@ void Tank::OnUpdate(olc::PixelGameEngine *pge, float fElapsedTime)
         state = State::IDLE;
         break;
     case State::IDLE: {
-        if (targetVec.mag() < gMinDistanceChase) {
+        if (targetVec.mag() < game->Params().chaseDistance) {
             figure.PlayAnimation("walk");
             state = State::CHASING;
         }
     } break;
     case State::CHASING: {
-        if (targetVec.mag() > gMinDistanceChase) {
+        if (targetVec.mag() > game->Params().chaseDistance) {
             state = State::TO_IDLE;
-        } else if (targetVec.mag() <= gMinDistanceAttack) {
+        } else if (targetVec.mag() <= game->Params().attackDistance) {
             figure.PlayAnimation("attack");
             state = State::ATTACK;
         }
-        position += dirToTarget * fElapsedTime * 40.0f;
+        position += dirToTarget * fElapsedTime * game->Params().tankSpeed;
     } break;
     case State::ATTACK: {
-        if (figure.IsAnimationFinished("attack") && targetVec.mag() > gMinDistanceAttack) {
+        if (figure.IsAnimationFinished("attack") && targetVec.mag() > game->Params().attackDistance) {
             figure.PlayAnimation("walk");
             state = State::CHASING;
         }
 
         const bool onHitFrame = figure.GetCurrentFrame("attack") == 5;
-        if (onHitFrame && !m_hasHit) target->TakeDamage(1);
+        if (onHitFrame && !m_hasHit) target->TakeDamage(game->Params().tankDamage);
         m_hasHit = onHitFrame;
     } break;
     case State::DEAD: {
@@ -83,7 +84,7 @@ void Tank::OnUpdate(olc::PixelGameEngine *pge, float fElapsedTime)
                 health = 0;
                 state = State::DEAD;
                 figure.PlayAnimation("death");
-                game->AwardScore(10);
+                game->AwardScore(game->Params().tankScore);
             }
             m_damageColorTimer = 0.25f;
         }

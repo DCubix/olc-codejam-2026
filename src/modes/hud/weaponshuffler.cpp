@@ -14,7 +14,7 @@ void WeaponShuffler::OnHide()
 
 void WeaponShuffler::RequestStop()
 {
-    if (m_state == State::HOLD || m_state == State::HIDE || m_state == State::SHUFFLE) m_stopping = true;
+    if (m_state == State::HOLD || m_state == State::HIDE) m_stopping = true;
     else Hide();
 }
 
@@ -44,7 +44,7 @@ void WeaponShuffler::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
 
     switch (m_state) {
     case State::IDLE:
-        if (timer <= gShuffleLeadTime) SetState(State::SHOW);
+        if (timer <= params->shuffleLeadTime) SetState(State::SHOW);
         break;
     case State::SHOW:
         if (m_stateTime >= m_slideTime) SetState(State::SHUFFLE);
@@ -57,7 +57,7 @@ void WeaponShuffler::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
         }
         break;
     case State::HOLD:
-        if (m_stateTime >= m_holdTime) SetState(State::HIDE);
+        if (m_stateTime >= params->shuffleHoldTime) SetState(State::HIDE);
         break;
     case State::HIDE:
         if (m_stateTime < m_slideTime) break;

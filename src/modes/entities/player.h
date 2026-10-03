@@ -3,9 +3,6 @@
 #include "../../stickfigure.h"
 #include "../../logic.h"
 
-constexpr int gPlayerMaxHealth = 1000;
-constexpr int gCriticalPlayerHealth = 250;
-
 struct Weapon {
     std::string name;
     std::string equipAssetPath, bulletAssetPath;
@@ -59,7 +56,7 @@ public:
     float shootTimer{0.1f};
     uint32_t weapon{0};
 
-    int health{gPlayerMaxHealth};
+    int health{0}; // set from difficulty in the constructor
     int damageCounter{0};
 
     std::function<void()> onDeath;
@@ -68,4 +65,5 @@ private:
     bool m_flipX{false};
     float m_damageColorTimer{0.0f};
     float m_healthRechargeTimer{0.0f};
+    float m_baseLeftArmAngle{0.0f};
 };

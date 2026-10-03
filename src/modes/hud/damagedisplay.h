@@ -5,6 +5,7 @@
 #include "../entities/player.h"
 
 #include "../../logic.h"
+#include "../../difficulty.hpp"
 #include "../../tween.h"
 
 constexpr float gDamageDisplayWidth = 80.0f;
@@ -19,6 +20,7 @@ public:
     void Reset();
 
     Player* player;
+    const DifficultyParams* params{&GetDifficulty(Difficulty::NORMAL)};
 
     std::function<void()> onExpire;
 

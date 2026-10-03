@@ -74,7 +74,8 @@ public:
         float fElapsedTime,
         bool flipX = false,
         std::optional<olc::Pixel> colorOverride = std::nullopt,
-        std::optional<olc::Pixel> light = std::nullopt
+        std::optional<olc::Pixel> light = std::nullopt,
+        std::function<void()> preDraw = nullptr
     );
 
     void PlayAnimation(const std::string& name, float timeScale = 1.0f);

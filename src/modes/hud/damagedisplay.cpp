@@ -40,7 +40,7 @@ void DamageDisplay::OnUpdate(olc::PixelGameEngine *pge, float fElapsedTime)
 
     m_tweens.Update(fElapsedTime);
 
-    std::string damageText = player->damageCounter < 3
+    std::string damageText = player->damageCounter < params->damageHitsToLoseCombo
         ? "Damage!" : "Combo Lost :(";
     auto sz = draw.GetTextSize(damageText, true);
     auto pos = olc::vf2d{ gHUDPadding, sz.y + gHUDPadding };
@@ -48,10 +48,11 @@ void DamageDisplay::OnUpdate(olc::PixelGameEngine *pge, float fElapsedTime)
     draw.StringProp(pos + m_textOff, damageText, olc::Colour::WHITE);
 
     constexpr float kSpacing = 3.0f;
-    const float blockWidth = (gDamageDisplayWidth / 3.0f) - kSpacing;
-    fnDrawBlock(pos + olc::vf2d{ 0, sz.y + 4.0f + m_textOff.y }, player->damageCounter >= 1, color, blockWidth);
-    fnDrawBlock(pos + olc::vf2d{ blockWidth + kSpacing, sz.y + 4.0f + m_textOff.y }, player->damageCounter >= 2, color, blockWidth);
-    fnDrawBlock(pos + olc::vf2d{ (blockWidth + kSpacing) * 2.0f, sz.y + 4.0f + m_textOff.y }, player->damageCounter >= 3, color, blockWidth);
+    const int blocks = params->damageHitsToLoseCombo;
+    const float blockWidth = (gDamageDisplayWidth / float(blocks)) - kSpacing;
+    for (int i = 0; i < blocks; i++) {
+        fnDrawBlock(pos + olc::vf2d{ (blockWidth + kSpacing) * float(i), sz.y + 4.0f + m_textOff.y }, player->damageCounter >= i + 1, color, blockWidth);
+    }
 }
 
 void DamageDisplay::Bump()

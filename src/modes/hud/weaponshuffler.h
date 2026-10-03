@@ -3,12 +3,9 @@
 #include <functional>
 
 #include "../../logic.h"
+#include "../../difficulty.hpp"
 #include "../../tween.h"
 #include "../../utils.hpp"
-
-constexpr float gSwapCountdownMin = 15.0f;
-constexpr float gSwapCountdownMax = 25.0f;
-constexpr float gShuffleLeadTime = 6.0f; // seconds before the swap that the shuffle UI appears
 
 // Counts down to a weapon swap and shows the shuffle frame near the end.
 // Visible = countdown running.
@@ -20,10 +17,12 @@ public:
 
     // Start (or keep) the countdown.
     void Resume() { m_stopping = false; Show(); }
-    // Stop the countdown. A weapon already chosen (HOLD/HIDE) stays on screen until its out animation ends.
+    // Stop the countdown. Hides immediately unless a weapon was already chosen (HOLD/HIDE), which stays on screen until its out animation ends.
     void RequestStop();
 
-    void ResetTimer() { timer = RandomF(gSwapCountdownMin, gSwapCountdownMax); }
+    void ResetTimer() { timer = RandomF(params->swapCountdownMin, params->swapCountdownMax); }
+
+    const DifficultyParams* params{&GetDifficulty(Difficulty::NORMAL)};
 
     float timer{0.0f};
     // Weapon shown during HOLD. Set by onSwap.
@@ -50,7 +49,6 @@ protected:
     const float m_maxFrameSize{68.0f};
     const float m_minFrameSize{2.0f};
     const float m_slideTime{0.5f};
-    const float m_holdTime{3.0f};
 
     TweenAnimator m_tweens;
 };

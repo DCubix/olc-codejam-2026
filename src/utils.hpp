@@ -9,6 +9,10 @@ inline float Deg2Rad(float deg) {
     return deg * std::numbers::pi_v<float> / 180.0f;
 }
 
+inline float Rad2Deg(float rad) {
+    return rad * 180.0f / std::numbers::pi_v<float>;
+}
+
 inline float RandomF(float vmin, float vmax) {
     return vmin + (float(rand() % RAND_MAX) / float(RAND_MAX)) * (vmax - vmin);
 }

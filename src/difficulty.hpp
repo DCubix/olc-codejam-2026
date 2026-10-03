@@ -10,31 +10,31 @@ enum class Difficulty { EASY = 0, NORMAL, HARD, COUNT };
 
 struct DifficultyParams {
     // Player (player.h, player.cpp)
-    int   playerMaxHealth;          // gPlayerMaxHealth
-    int   playerCriticalHealth;     // gCriticalPlayerHealth, red vignette starts at or below this
+    int   playerMaxHealth;
+    int   playerCriticalHealth;     // red vignette starts at or below this
     float playerMoveSpeed;          // units/s, base speed in Player::OnUpdate
     float playerRegenInterval;      // seconds without damage per +1 health
     int   damageHitsToLoseCombo;    // hits taken during a combo before it resets
 
     // Combo (logic.h, combodisplay.h, in_game_state.hpp AwardScore)
-    int   comboEveryNHits;          // gComboEveryNHits
-    float comboResetTimer;          // gComboResetTimer, seconds before the combo expires
-    int   fireRateStepPerCombo;     // gFireRateStepUpPerCombo
-    int   maxFireRateMultiplier;    // gMaxFireRateMultiplier
-    int   moveSpeedStepPerCombo;    // gMoveSpeedMultiplierStepUpPerCombo
+    int   comboEveryNHits;
+    float comboResetTimer;          // seconds before the combo expires
+    int   fireRateStepPerCombo;
+    int   maxFireRateMultiplier;
+    int   moveSpeedStepPerCombo;
     int   maxMoveSpeedMultiplier;   // clamp in AwardScore
-    int   scoreStepPerCombo;        // gScoreMultiplierStepUpPerCombo
+    int   scoreStepPerCombo;
     int   maxScoreMultiplier;       // clamp in AwardScore
 
     // Weapon shuffler (weaponshuffler.h)
-    float swapCountdownMin;         // gSwapCountdownMin
-    float swapCountdownMax;         // gSwapCountdownMax
-    float shuffleLeadTime;          // gShuffleLeadTime
-    float shuffleHoldTime;          // m_holdTime
+    float swapCountdownMin;
+    float swapCountdownMax;
+    float shuffleLeadTime;
+    float shuffleHoldTime;
 
     // Enemy AI (logic.h)
-    float chaseDistance;            // gMinDistanceChase
-    float attackDistance;           // gMinDistanceAttack
+    float chaseDistance;
+    float attackDistance;
 
     // Swarmer (swarmer.cpp)
     float swarmerSpeed;
@@ -50,6 +50,7 @@ struct DifficultyParams {
     // Spawner (in_game_state.hpp OnUpdate)
     int   maxSwarmers;              // spawning pauses at this many swarmers
     float spawnInterval;            // seconds between spawns
+    int   spawnRateStepPerCombo;    // percent cut from spawnInterval per combo above 1, capped by maxFireRateMultiplier
     float tankChance;               // 0..1 chance a spawn is a tank
     float spawnDistanceX;           // spawn offset from the player, left or right
     float spawnRangeY;              // spawn offset from the player, +/- vertical
@@ -78,7 +79,7 @@ inline constexpr DifficultyParams gDifficulties[] = {
         .shuffleLeadTime = 6.0f,
         .shuffleHoldTime = 3.0f,
 
-        .chaseDistance = 400.0f,
+        .chaseDistance = 600.0f,
         .attackDistance = 40.0f,
 
         .swarmerSpeed = 50.0f,
@@ -92,6 +93,7 @@ inline constexpr DifficultyParams gDifficulties[] = {
 
         .maxSwarmers = 30,
         .spawnInterval = 0.8f,
+        .spawnRateStepPerCombo = 3,
         .tankChance = 0.05f,
         .spawnDistanceX = 600.0f,
         .spawnRangeY = 400.0f,
@@ -118,7 +120,7 @@ inline constexpr DifficultyParams gDifficulties[] = {
         .shuffleLeadTime = 6.0f,
         .shuffleHoldTime = 3.0f,
 
-        .chaseDistance = 500.0f,
+        .chaseDistance = 600.0f,
         .attackDistance = 40.0f,
 
         .swarmerSpeed = 60.0f,
@@ -132,6 +134,7 @@ inline constexpr DifficultyParams gDifficulties[] = {
 
         .maxSwarmers = 50,
         .spawnInterval = 0.4f,
+        .spawnRateStepPerCombo = 4,
         .tankChance = 0.15f,
         .spawnDistanceX = 600.0f,
         .spawnRangeY = 400.0f,
@@ -172,6 +175,7 @@ inline constexpr DifficultyParams gDifficulties[] = {
 
         .maxSwarmers = 70,
         .spawnInterval = 0.25f,
+        .spawnRateStepPerCombo = 5,
         .tankChance = 0.25f,
         .spawnDistanceX = 600.0f,
         .spawnRangeY = 400.0f,
