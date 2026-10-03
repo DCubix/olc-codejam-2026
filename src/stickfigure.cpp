@@ -97,18 +97,25 @@ static void DrawCapsule(olc::Draw &draw, olc::vf2d p1, olc::vf2d p2, float width
     draw.FilledCircle(p2, hw, color);
 }
 
-void Figure::DrawStick(olc::Draw &draw, StickID sid, std::optional<olc::Pixel> colorOverride)
+void Figure::DrawStick(olc::Draw &draw, StickID sid, std::optional<olc::Pixel> colorOverride, std::optional<olc::Pixel> light)
 {
     const auto& stick = m_sticks[sid];
     if (stick.shape == StickShape::NONE) return;
 
-    const auto color = colorOverride
+    auto color = colorOverride
         ? *colorOverride
         : stick.color;
+
+
+    auto li = light.value_or(olc::Colour::WHITE);
+    color.r = MulU8(color.r, li.r);
+    color.g = MulU8(color.g, li.g);
+    color.b = MulU8(color.b, li.b);
     
     float luma = (float(color.r) + float(color.g) + float(color.b)) / 765.0f;
-    const auto outlineColor = luma < 0.2f
-        ? olc::Colour::WHITE : olc::Colour::BLACK;
+    // const auto outlineColor = luma < 0.2f
+    //     ? olc::Colour::WHITE : olc::Colour::BLACK;
+    const auto outlineColor = olc::Colour::BLACK;
 
     switch (stick.shape) {
         case StickShape::CAPSULE: {
@@ -156,7 +163,7 @@ void Figure::DrawStick(olc::Draw &draw, StickID sid, std::optional<olc::Pixel> c
             };
             auto region = stick.sprite.image->region(src, tileSize);
 
-            draw.Image(region, -olc::vf2d(stick.sprite.origin) * scale, { scale, scale });
+            draw.Image(region, -olc::vf2d(stick.sprite.origin) * scale, { scale, scale }, color);
 
             draw.SetWorldTransform(tmp);
         } break;
@@ -164,7 +171,7 @@ void Figure::DrawStick(olc::Draw &draw, StickID sid, std::optional<olc::Pixel> c
     }
 }
 
-void Figure::Draw(olc::Draw &draw, float fElapsedTime, bool flipX, std::optional<olc::Pixel> colorOverride)
+void Figure::Draw(olc::Draw &draw, float fElapsedTime, bool flipX, std::optional<olc::Pixel> colorOverride, std::optional<olc::Pixel> light)
 {
     auto fnLerpAngle = [](float start, float end, float t) {
         constexpr float PI = std::numbers::pi_v<float>;
@@ -288,7 +295,7 @@ void Figure::Draw(olc::Draw &draw, float fElapsedTime, bool flipX, std::optional
     if (flipX) draw.WorldScale({ -1.0f, 1.0f });
 
     for (const auto sid : orderedSticks) {
-        DrawStick(draw, sid, colorOverride);
+        DrawStick(draw, sid, colorOverride, light);
     }
 
     draw.SetWorldTransform(savedTransform);

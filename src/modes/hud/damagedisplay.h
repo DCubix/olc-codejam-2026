@@ -2,28 +2,28 @@
 
 #include <functional>
 
+#include "../entities/player.h"
+
 #include "../../logic.h"
 #include "../../tween.h"
 
-constexpr float gComboResetTimer = 3.0f;
+constexpr float gDamageDisplayWidth = 80.0f;
 
-class ComboDisplay : public HUDElement {
+class DamageDisplay : public HUDElement
+{
 public:
     void OnShow() override;
     void OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime) override;
 
-    // Call when the combo count goes up. Restarts the expiry timer.
     void Bump();
-
-    // Called when the players takes damage, or when the timer runs out.
     void Reset();
 
-    GlobalGameData* data{nullptr};
-    // Called once when the timer runs out, before the exit animation.
+    Player* player;
+
     std::function<void()> onExpire;
 
 protected:
-    float m_timer{0.0f};
+    float m_blinkTimer{0.0f};
     olc::vf2d m_textOff{0.0f, 0.0f};
     bool m_exiting{false};
 

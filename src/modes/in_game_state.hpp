@@ -8,13 +8,21 @@
 
 #include "entities/player.h"
 #include "entities/swarmer.h"
+#include "entities/tank.h"
 #include "../utils.hpp"
 #include "hud/combodisplay.h"
 #include "hud/weaponshuffler.h"
+#include "hud/damagedisplay.h"
 
 #include "utilities/olcUTIL3_Geometry2D.h"
 namespace g2d = olc::utils::geom2d;
 
+constexpr float kFar = 0.7f;      // tilt: horizontal scale of the top screen row (bottom row is 1)
+constexpr float kAmbient = 0.05f; // brightness outside the circle
+constexpr int kTile = 32;
+constexpr olc::vi2d kFloorTiles{48, 32};
+constexpr olc::vf2d kFloorMax{kFloorTiles.x * kTile / 2.0f, kFloorTiles.y * kTile / 2.0f};
+constexpr olc::vf2d kFloorMin{-kFloorMax.x, -kFloorMax.y};
 
 class InGameState : public GameMode {
 public:
@@ -34,8 +42,6 @@ public:
         m_pGlobalData = std::make_shared<GlobalGameData>();
 
         auto player = Add<Player>(this);
-        auto playerSize = player->figure.Size();
-        player->position = pge->ScreenSize() / 2.0f + olc::vf2d{0.0f, playerSize.y/2.0f};
 
         comboDisplay.data = m_pGlobalData.get();
         comboDisplay.onExpire = [this]() {
@@ -55,11 +61,73 @@ public:
             return m_pGlobalData->combo > 0;
         };
 
+        damageDisplay.player = player;
+
+        // Lights
+        const float lightMargin = 2.0f * kTile;
+        for (int i = 0; i < 18; i++) {
+            Light l;
+            l.pos = olc::vf2d{
+                RandomF(kFloorMin.x + lightMargin, kFloorMax.x - lightMargin),
+                RandomF(kFloorMin.y + lightMargin, kFloorMax.y - lightMargin)
+            };
+            l.radius = RandomF(80.0f, 300.0f);
+            lights.push_back(l);
+        }
+
+        /**
+uniform vec2 pgeTargetSizeInPixels;			// Size of the target olc::Image in pixels
+uniform vec2 pgeInverseTargetSizeInPixels;  // 1.0 / Size of the target olc::Image in pixels
+uniform float pgeTotalTimeElapsed;			// Total time elapsed since application started
+uniform sampler2D pgeTexture0;				// Current source olc::Image bound as texture0
+uniform sampler2D pgeTexture1;				// Current source olc::Image bound as texture1
+uniform sampler2D pgeTexture2;				// Current source olc::Image bound as texture2
+uniform sampler2D pgeTexture3;				// Current source olc::Image bound as texture3
+
+// Inputs from Vertex Shader
+in vec2 oTex;
+in vec4 oCol;
+         **/
+
+        // FX
+        fxRedVignetteShader.SetVertexShaderSource(
+            olc::gpu::Shader_GLSL33::VS_DefaultHeader() +
+            olc::gpu::Shader_GLSL33::VS_DefaultMain()
+        );
+        fxRedVignetteShader.SetPixelShaderSource(
+            olc::gpu::Shader_GLSL33::PS_DefaultHeader() + R"(
+            uniform float uIntensity;
+            void main() {
+                vec2 uv = gl_FragCoord.xy * pgeInverseTargetSizeInPixels;
+                uv *= 1.0 - uv.yx;
+
+                float vig = uv.x * uv.y * 15.0;
+                vig = 1.0 - pow(vig, clamp(uIntensity, 0.0, 1.0));
+
+                pixel = vec4(vig, 0.0, 0.0, 1.0);
+            })"
+        );
+        if (fxRedVignetteShader.Compile() != "OK") return false;
+        fxRedVignetteShader.CreateUniform("uIntensity");
+
+        pge->CreateImage(fxRedVignetteTex, pge->ScreenSize());
+
         return false;
     }
 
     PlayState OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime) override
     {
+        // Add queued entities
+        for (auto& e : entityQueue) {
+            entities.push_back(std::move(e));
+        }
+        entityQueue.clear();
+
+
+        auto player = Get<Player>();
+
+        longTimer += fElapsedTime;
+
         // DEBUG
         if (pge->GetKeyboard().GetKey(olc::Key::K1).bPressed) { // simulate countdown at 5 seconds
             weaponShuffler.timer = 5.0f;
@@ -74,14 +142,27 @@ public:
 
         if (swarmers < 50) {
             timer += fElapsedTime;
-            if (timer >= 0.3f) {
+            if (timer >= 0.4f) {
                 timer = 0.0f;
-                swarmers++;
 
-                auto player = Get<Player>();
+                float randomAngle = RandomF(-pi, pi);
+                // sx = either -600.0f or 600.0f
+                float sx = RandomF(-1.0f, 1.0f) < 0.0f ? -600.0f : 600.0f;
+                float sy = RandomF(-1.0f, 1.0f) * 400.0f;
+                olc::vf2d pos = olc::vf2d{sx, sy} + player->position;
+
                 auto playerSize = player->figure.Size();
-                auto s = Add<Swarmer>(this);
-                s->position = olc::vf2d{pge->ScreenSize().x / 2.0f + 300.0f, RandomF(80.0f, pge->ScreenSize().y-80.0f)};
+
+                // 15% chance of spawning a tank
+                float chance = RandomF(0.0f, 1.0f);
+
+                if (chance < 0.15f) {
+                    auto t = Add<Tank>(this);
+                    t->position = pos;
+                } else {
+                    auto s = Add<Swarmer>(this);
+                    s->position = pos;
+                }
             }
         }
 
@@ -91,13 +172,20 @@ public:
 
         auto& draw = pge->GetDraw();
 
-        draw.Clear(olc::Pixel(0x44, 0x8E, 0xE4));
+        draw.Clear(olc::Colour::BLACK);
 
         std::stable_sort(entities.begin(), entities.end(), [](const auto& a, const auto& b) {
             return a->position.y < b->position.y;
         });
 
-        draw.WorldOffset(cameraShaker);
+        // Update camera
+        auto diff = player->position - camera;
+        camera += diff * fElapsedTime * 3.0f;
+
+        auto cameraPos = camera - pge->ScreenSize() / 2.0f;
+        DrawFloor(pge, cameraPos - cameraShaker);
+        draw.WorldOffset(-cameraPos + cameraShaker);
+
         for (auto& e : entities) {
             e->Update(pge, fElapsedTime);
         }
@@ -125,11 +213,12 @@ public:
             }
         }
 
-        // Add queued entities
-        for (auto& e : entityQueue) {
-            entities.push_back(std::move(e));
+        // Keep entities inside the floor
+        for (auto& e : entities) {
+            if (!e->resolveCollision) continue;
+            e->position.x = std::clamp(e->position.x, kFloorMin.x+kTile*2, kFloorMax.x-kTile*2);
+            e->position.y = std::clamp(e->position.y, kFloorMin.y+kTile*2, kFloorMax.y-kTile*2);
         }
-        entityQueue.clear();
 
         // Remove dead entities
         entities.erase(std::remove_if(entities.begin(), entities.end(),
@@ -137,20 +226,42 @@ public:
 
         comboDisplay.Update(pge, fElapsedTime);
         weaponShuffler.Update(pge, fElapsedTime);
+        damageDisplay.Update(pge, fElapsedTime);
+
+        // FX
+        if (player->health <= gCriticalPlayerHealth) {
+            draw.SetTarget(fxRedVignetteTex);
+            draw.Clear(olc::Colour::BLACK);
+            draw.SetShader(fxRedVignetteShader);
+
+            float intensity = float(gCriticalPlayerHealth - player->health) / float(gCriticalPlayerHealth);
+            float pulsating = (0.5f + 0.5f * std::sin(longTimer * 6.0f)) * 0.15f;
+            draw.SetShaderUniform("uIntensity", intensity + pulsating);
+            draw.FilledRect({0,0}, pge->ScreenSize());
+            draw.ResetShader();
+
+            draw.SetTarget(pge->GetScreen());
+
+            draw.SetBlendMode(olc::BlendMode::Additive);
+            draw.Image(fxRedVignetteTex.all(), {0,0});
+            draw.SetBlendMode(olc::BlendMode::Alpha);
+        }
+
 
         // show GD stats (debug)
-        draw.StringProp(
-            { 8, 8 },
-            "Score: " + std::to_string(gd.score) + "\n"
-            "Hits: " + std::to_string(gd.hits) + "\n"
-            "Speed Mul.: " + std::to_string(gd.moveSpeedMultiplier) + "\n"
-            "Fire Rate Mul.: " + std::to_string(gd.fireRateMultiplier) + "\n"
-            "Score Mul.: " + std::to_string(gd.scoreMultiplier) + "\n"
-            "Combo: " + std::to_string(gd.combo) + "\n"
-            "Swarmers: " + std::to_string(swarmers) + "\n"
-            "Swap Countdown: " + std::to_string(weaponShuffler.timer) + "\n",
-            olc::Colour::BLACK
-        );
+        // draw.StringProp(
+        //     { 8, 8 },
+        //     "Score: " + std::to_string(gd.score) + "\n"
+        //     "Hits: " + std::to_string(gd.hits) + "\n"
+        //     "Speed Mul.: " + std::to_string(gd.moveSpeedMultiplier) + "\n"
+        //     "Fire Rate Mul.: " + std::to_string(gd.fireRateMultiplier) + "\n"
+        //     "Score Mul.: " + std::to_string(gd.scoreMultiplier) + "\n"
+        //     "Combo: " + std::to_string(gd.combo) + "\n"
+        //     "Swarmers: " + std::to_string(swarmers) + "\n"
+        //     "Swap Countdown: " + std::to_string(weaponShuffler.timer) + "\n"
+        //     "Health: " + std::to_string(Get<Player>()->health),
+        //     olc::Colour::WHITE
+        // );
 
         return PlayState::IN_GAME;
     }
@@ -163,6 +274,56 @@ public:
     bool OnExitMode(olc::PixelGameEngine* pge) override
     {
         return false;
+    }
+
+    // Draws floor.png as 32x32 world tiles on a ground plane tilted around X.
+    // Each tile is a trapezoid (two textured triangles); light is per vertex, summed over `lights`.
+    void DrawFloor(olc::PixelGameEngine* pge, const olc::vf2d& cameraPos)
+    {
+        auto& draw = pge->GetDraw();
+        auto* tex = ImageRepository::Get().GetImage("assets/sprites/floor.png");
+        if (!tex) return;
+
+        const auto screen = pge->ScreenSize();
+        const float cx = cameraPos.x + screen.x / 2.0f;
+        const float depthK = screen.y / (1.0f / kFar - 1.0f); // keeps the visible world height unchanged
+
+        // World (ground plane) to screen. Scale is 1/(1 + depth/K): linear in screen y, as for a real ground plane.
+        auto project = [&](float wx, float wy) {
+            const float scale = 1.0f / (1.0f + (cameraPos.y + screen.y - wy) / depthK);
+            return olc::vf2d{
+                screen.x / 2.0f + (wx - cx) * scale,
+                (scale - kFar) / (1.0f - kFar) * screen.y
+            };
+        };
+        auto light = [&](float wx, float wy) {
+            float f = 0.0f;
+            for (const auto& l : lights) {
+                const float k = std::clamp(1.0f - (olc::vf2d{wx, wy} - l.pos).mag() / l.radius, 0.0f, 1.0f);
+                f += k * k;
+            }
+            const float m = std::min(1.0f, kAmbient + (1.0f - kAmbient) * f);
+            return olc::Pixel(uint8_t(255 * m), uint8_t(255 * m), uint8_t(255 * m));
+        };
+
+        const int tx0 = std::max(-kFloorTiles.x / 2, int(std::floor((cx - screen.x / 2.0f / kFar) / kTile)));
+        const int tx1 = std::min(kFloorTiles.x / 2, int(std::ceil((cx + screen.x / 2.0f / kFar) / kTile)));
+        const int ty0 = std::max(-kFloorTiles.y / 2, int(std::floor(cameraPos.y / kTile)));
+        const int ty1 = std::min(kFloorTiles.y / 2, int(std::ceil((cameraPos.y + screen.y) / kTile)));
+
+        for (int ty = ty0; ty < ty1; ty++) {
+            for (int tx = tx0; tx < tx1; tx++) {
+                const float x0 = float(tx * kTile), x1 = x0 + kTile;
+                const float y0 = float(ty * kTile), y1 = y0 + kTile;
+                const auto tl = project(x0, y0), tr = project(x1, y0);
+                const auto bl = project(x0, y1), br = project(x1, y1);
+                const auto ltl = light(x0, y0), ltr = light(x1, y0);
+                const auto lbl = light(x0, y1), lbr = light(x1, y1);
+
+                draw.TexturedTriangle(tl, tr, bl, ltl, ltr, lbl, {0, 0}, {1, 0}, {0, 1}, *tex);
+                draw.TexturedTriangle(tr, br, bl, ltr, lbr, lbl, {1, 0}, {1, 1}, {0, 1}, *tex);
+            }
+        }
     }
 
     template <typename T, typename... Args>
@@ -189,11 +350,11 @@ public:
             if (e->TypeId() == id) callback(*static_cast<T*>(e.get()));
     }
 
-    void AwardScore()
+    void AwardScore(int amt = 5)
     {
         auto& gd = *m_pGlobalData.get();
 
-        gd.score += 5 * gd.scoreMultiplier;
+        gd.score += amt * gd.scoreMultiplier;
         gd.hits++;
 
         ShakeCamera(3.5f);
@@ -236,6 +397,23 @@ public:
             .Then().From(v3).To(olc::vf2d{}).For(0.1f).Start();
     }
 
+    olc::Pixel GetLightContributionAt(const olc::vf2d& pos)
+    {
+        float f = 0.0f;
+        for (const auto& l : lights) {
+            const float k = std::clamp(1.0f - (pos - l.pos).mag() / l.radius, 0.0f, 1.0f);
+            f += k * k;
+        }
+        const float m = std::min(1.0f, kAmbient + (1.0f - kAmbient) * f);
+        return olc::Pixel(uint8_t(255 * m), uint8_t(255 * m), uint8_t(255 * m));
+    }
+
+    struct Light {
+        olc::vf2d pos;
+        float radius;
+    };
+    std::vector<Light> lights;
+
     std::vector<std::unique_ptr<Entity>> entities;
     std::vector<std::unique_ptr<Entity>> entityQueue;
 
@@ -243,8 +421,15 @@ public:
 
     ComboDisplay comboDisplay;
     WeaponShuffler weaponShuffler;
+    DamageDisplay damageDisplay;
 
-    olc::vf2d cameraShaker{0.0f, 0.0f};
+    olc::vf2d cameraShaker{0.0f, 0.0f}, camera{0.0f, 0.0f};
 
     TweenAnimator tweenAnimator;
+
+    float longTimer{0.0f};
+
+    // FX
+    olc::gpu::Shader_GLSL33 fxRedVignetteShader;
+    olc::Image fxRedVignetteTex;
 };

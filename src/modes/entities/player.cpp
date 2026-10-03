@@ -34,40 +34,48 @@ void Player::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
     auto& keyboard = pge->GetKeyboard();
     auto& draw = pge->GetDraw();
 
-    auto mp = mouse.GetPosition();
+    auto mp = draw.ScreenToWorld(mouse.GetPosition());
     auto dir = (mp - position).norm();
-    auto flipX = dir.x < 0.0f;
 
     olc::vf2d moveDir{0.0f, 0.0f};
 
-    if (keyboard.GetKey(olc::Key::W).bHeld) {
-        figure.PlayAnimation("run");
-        moveDir.y = -1.0f;
-    } else if (keyboard.GetKey(olc::Key::S).bHeld) {
-        figure.PlayAnimation("run");
-        moveDir.y = 1.0f;
+    if (!IsDead()) {
+        m_flipX = dir.x < 0.0f;
+        if (keyboard.GetKey(olc::Key::W).bHeld) {
+            figure.PlayAnimation("run");
+            moveDir.y = -1.0f;
+        } else if (keyboard.GetKey(olc::Key::S).bHeld) {
+            figure.PlayAnimation("run");
+            moveDir.y = 1.0f;
+        }
+
+        if (keyboard.GetKey(olc::Key::A).bHeld) {
+            figure.PlayAnimation("run");
+            moveDir.x = -1.0f;
+        } else if (keyboard.GetKey(olc::Key::D).bHeld) {
+            figure.PlayAnimation("run");
+            moveDir.x = 1.0f;
+        }
+
+        float moveSpeedMult = 1.0f + float(game->GameData().moveSpeedMultiplier) / 100.0f;
+
+        if (moveDir.mag2() > 0.0f)
+            position += moveDir.norm() * fElapsedTime * 140.0f * moveSpeedMult;
+        else figure.PlayAnimation("idle");
+
+        m_healthRechargeTimer += fElapsedTime;
+        if (m_healthRechargeTimer >= 1.0f) {
+            m_healthRechargeTimer = 0.0f;
+            health = std::min(health + 1, gPlayerMaxHealth);
+        }
     }
-
-    if (keyboard.GetKey(olc::Key::A).bHeld) {
-        figure.PlayAnimation("run");
-        moveDir.x = -1.0f;
-    } else if (keyboard.GetKey(olc::Key::D).bHeld) {
-        figure.PlayAnimation("run");
-        moveDir.x = 1.0f;
-    }
-
-    float moveSpeedMult = 1.0f + float(game->GameData().moveSpeedMultiplier) / 100.0f;
-
-    if (moveDir.mag2() > 0.0f)
-        position += moveDir.norm() * fElapsedTime * 140.0f * moveSpeedMult;
-    else figure.PlayAnimation("idle");
 
     auto size = figure.Size();
     auto renderPos = position - olc::vf2d{0.0f, size.y/2.6f};
 
     auto fnSpawnBullet = [&](const Weapon& w, uint32_t bulletNo) {
         auto bullet = game->Add<PlayerBullet>(*w.bulletAsset);
-        float bulletFacing = flipX ? -1.0f : 1.0f;
+        float bulletFacing = m_flipX ? -1.0f : 1.0f;
 
         auto localWPos = figure.GetStickWorldTipOffset(figure.GetStickID("weapon"));
         localWPos.x *= bulletFacing;
@@ -91,7 +99,7 @@ void Player::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
     };
 
     const auto& w = gWeapons[weapon];
-    if (mouse.GetButton(0).bHeld) {
+    if (mouse.GetButton(0).bHeld && !IsDead()) {
         shootTimer += fElapsedTime;
 
         const auto& gd = game->GameData();
@@ -113,9 +121,19 @@ void Player::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
     if (stk && stk->sprite.image != w.equipAsset->image)
         stk->sprite = *w.equipAsset;
 
+    m_damageColorTimer -= fElapsedTime;
+    if (m_damageColorTimer <= 0.0f) {
+        m_damageColorTimer = 0.0f;
+    }
+
+    float t = m_damageColorTimer / 0.25f;
+    olc::Pixel color = olc::PixelLerp(olc::Colour::WHITE, olc::PixelF(1.0f, 0.5f, 0.5f), t);
+
+    auto light = game->GetLightContributionAt(position);
+
     auto tmp = draw.GetWorldTransform();
     draw.WorldOffset(renderPos);
-    figure.Draw(draw, fElapsedTime, flipX);
+    figure.Draw(draw, fElapsedTime, m_flipX, color, light);
     draw.SetWorldTransform(tmp);
 }
 
@@ -124,4 +142,28 @@ void Player::SwapWeapon()
     const auto weaponCount = sizeof(gWeapons) / sizeof(gWeapons[0]);
     float randomW = RandomF(0.0f, float(weaponCount));
     weapon = uint32_t(std::min(size_t(randomW), weaponCount - 1));
+}
+
+void Player::TakeDamage(int value)
+{
+    if (IsDead()) return;
+    health -= value;
+
+    m_damageColorTimer = 0.25f;
+    m_healthRechargeTimer = 0.0f;
+
+    if (game->GameData().combo > 0) {
+        game->damageDisplay.Bump();
+        if (++damageCounter >= 3) {
+            game->comboDisplay.Reset();
+            game->damageDisplay.Reset();
+        }
+    }
+
+    if (health <= 0) {
+        health = 0;
+        figure.PlayAnimation("death");
+        game->ShakeCamera(4.0f);
+        if (onDeath) onDeath();
+    }
 }

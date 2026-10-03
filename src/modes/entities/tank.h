@@ -4,12 +4,13 @@
 #include "../../stickfigure.h"
 
 class InGameState;
-class Swarmer : public Entity {
+class Tank : public Entity
+{
 public:
-    Swarmer() = default;
-    Swarmer(InGameState* game);
+    Tank() = default;
+    Tank(InGameState* game);
 
-    int TypeId() const override { return TypeIdOf<Swarmer>(); }
+    int TypeId() const override { return TypeIdOf<Tank>(); }
 
     void OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime) override;
 
@@ -21,10 +22,15 @@ public:
         DEAD,
         TO_IDLE
     };
-    
+
     State state{ State::TO_IDLE };
     bool m_hasHit{false};
 
     Figure figure;
     InGameState* game;
+
+    int health{ 3 };
+
+private:
+    float m_damageColorTimer{0.0f};
 };

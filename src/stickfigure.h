@@ -73,7 +73,8 @@ public:
         olc::Draw& draw,
         float fElapsedTime,
         bool flipX = false,
-        std::optional<olc::Pixel> colorOverride = std::nullopt
+        std::optional<olc::Pixel> colorOverride = std::nullopt,
+        std::optional<olc::Pixel> light = std::nullopt
     );
 
     void PlayAnimation(const std::string& name, float timeScale = 1.0f);
@@ -101,7 +102,12 @@ private:
     float GetStickWorldRotation(StickID sid) const;
     void UpdateSize();
 
-    void DrawStick(olc::Draw& draw, StickID sid, std::optional<olc::Pixel> colorOverride = std::nullopt);
+    void DrawStick(
+        olc::Draw& draw,
+        StickID sid,
+        std::optional<olc::Pixel> colorOverride = std::nullopt,
+        std::optional<olc::Pixel> light = std::nullopt
+    );
 };
 
 class FigureRepository {

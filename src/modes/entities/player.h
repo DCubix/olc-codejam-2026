@@ -3,6 +3,9 @@
 #include "../../stickfigure.h"
 #include "../../logic.h"
 
+constexpr int gPlayerMaxHealth = 1000;
+constexpr int gCriticalPlayerHealth = 250;
+
 struct Weapon {
     std::string name;
     std::string equipAssetPath, bulletAssetPath;
@@ -46,10 +49,23 @@ public:
     void OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime) override;
 
     void SwapWeapon();
+    void TakeDamage(int value);
+
+    bool IsDead() const { return health <= 0; }
 
     Figure figure;
     InGameState* game;
 
     float shootTimer{0.1f};
-    uint32_t weapon{4};
+    uint32_t weapon{0};
+
+    int health{gPlayerMaxHealth};
+    int damageCounter{0};
+
+    std::function<void()> onDeath;
+
+private:
+    bool m_flipX{false};
+    float m_damageColorTimer{0.0f};
+    float m_healthRechargeTimer{0.0f};
 };

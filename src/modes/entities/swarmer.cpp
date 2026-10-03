@@ -53,10 +53,14 @@ void Swarmer::OnUpdate(olc::PixelGameEngine *pge, float fElapsedTime)
             position += dirToTarget * fElapsedTime * 60.0f;
         } break;
         case State::ATTACK: {
-            if (figure.IsAnimationFinished("attack")) {
+            if (figure.IsAnimationFinished("attack") && targetVec.mag() > gMinDistanceAttack) {
                 figure.PlayAnimation("walk");
                 state = State::CHASING;
             }
+
+            const bool onHitFrame = figure.GetCurrentFrame("attack") == 9;
+            if (onHitFrame && !m_hasHit) target->TakeDamage(1);
+            m_hasHit = onHitFrame;
         } break;
         case State::DEAD: {
             if (figure.IsAnimationFinished("death")) {
@@ -80,14 +84,16 @@ void Swarmer::OnUpdate(olc::PixelGameEngine *pge, float fElapsedTime)
         }
     });
 
+    auto light = game->GetLightContributionAt(position);
+
     auto tmp = draw.GetWorldTransform();
     draw.WorldOffset(position - olc::vf2d{0.0f, size.y/2.4f});
-    figure.Draw(draw, fElapsedTime, flipX);
+    figure.Draw(draw, fElapsedTime, flipX, {}, light);
     draw.SetWorldTransform(tmp);
 
-    draw.Rect(
-        hitBox.pos,
-        hitBox.size,
-        olc::Pixel(255, 0, 0)
-    );
+    // draw.Rect(
+    //     hitBox.pos,
+    //     hitBox.size,
+    //     olc::Pixel(255, 0, 0)
+    // );
 }

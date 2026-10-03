@@ -1,0 +1,94 @@
+P 232 242 235
+N 0 0 0 90 = root>
+C 0 0 9 90 18 35 71 118 = body>
+C 0 0 6 90 24 35 71 118 = torso>
+C 0 0 14 90 8 64 64 64 = right_arm
+C 0 0 14 90 8 64 64 64 -1 = left_arm
+N 0 0 0 0 <
+N 0 0 0 0 <
+C 0 0 8 90 6 64 64 64 1 = right_leg
+C 12 12 8 90 6 64 64 64 -1 = left_leg
+A 40 P = idle
+  K body 0 0 0 90
+  K body 40 1 0 -268.0277
+  K right_leg 0 6 4 -90
+  K right_leg 40 6 4 -84.2223
+  K left_leg 0 -6 -16 -90
+  K left_leg 40 -6 -16 -92.11
+  K torso 0 -0.125 0 -90
+  K torso 40 -0.125 0 -446.8284
+  K right_arm 0 0 -10 90
+  K right_arm 40 0 -10 461.3378
+  K left_arm 0 0 10 90
+  K left_arm 40 0 10 432.1297
+A 31 OS = attack
+  K root 0 0 0 0
+  K body 0 0 0 90
+  K right_leg 0 6 4 -90
+  K left_leg 0 -6 -16 -90
+  K torso 0 0 0 -90
+  K torso 5 0 0 -458.8717
+  K torso 30 0 0 -90
+  K right_arm 0 0 -10 90
+  K right_arm 5 0 -10 -58.6006
+  K right_arm 30 0 -10 90
+  K left_arm 0 0 10 90
+  K left_arm 5 0 10 -54.7469
+  K left_arm 30 0 10 90
+A 22 OS = death
+  K root 0 0 0 0
+  K root 8 -7 2 0
+  K root 16 -15 8 0
+  K body 0 0 0 -257.4326
+  K body 16 0 0 0
+  K right_leg 0 6 3.68 -126.7028
+  K right_leg 8 6 -4.195 -155.0915
+  K right_leg 22 3.75 -7.195 -153.9542
+  K left_leg 0 -6 -16 -140.9468
+  K left_leg 8 -12.875 -19.75 -191.8221
+  K left_leg 22 -17.25 -17.5 -159.523
+  K torso 0 0 0 -90
+  K right_arm 0 0 -10 46.2805
+  K right_arm 8 0 -10 36.4738
+  K right_arm 22 0.375 -8.5 -272.4411
+  K left_arm 0 0 10 50.0865
+  K left_arm 8 0.6642 9.5712 34.6585
+  K left_arm 22 0.6642 9.5712 -264.8566
+A 60 L = walk
+  K root 0 0 0 0
+  K body 0 -2 0 -284.6962
+  K body 10 0 0 90
+  K body 30 -2 0 -284.6962
+  K body 40 0 0 90
+  K body 60 -2 0 -284.6962
+  K right_leg 0 5.875 3.355 -82.5623
+  K right_leg 10 6.375 4.23 -76.5178
+  K right_leg 20 4.8611 -2.3533 -48.4245
+  K right_leg 30 2.875 -5.27 -154.744
+  K right_leg 40 5.6875 -5.1138 -103.2213
+  K right_leg 50 6.75 -0.7075 -90.6456
+  K right_leg 60 5.875 3.355 -82.5623
+  K left_leg 0 -10.125 -19.925 -148.2629
+  K left_leg 10 -6 -17.05 -100.5231
+  K left_leg 30 -6.375 -9.05 -78.6826
+  K left_leg 40 -6.0625 -13.5188 -54.4623
+  K left_leg 50 -5.75 -14.9875 -82.7695
+  K left_leg 60 -10.125 -19.925 -148.2629
+  K torso 0 0 0 -92.7208
+  K torso 10 0 0 -449.4476
+  K torso 30 0 0 -92.7208
+  K torso 40 0 0 -445.8232
+  K torso 60 0 0 -92.7208
+  K right_arm 0 0 -10 48.0917
+  K right_arm 20 0 -10 91.9334
+  K right_arm 30 0 -10 115.6016
+  K right_arm 50 0.1386 -10.1098 90.6439
+  K right_arm 60 0.1386 -10.1098 46.5035
+  K left_arm 0 0 10 126.2697
+  K left_arm 10 0 10 91.0271
+  K left_arm 30 0 10 48.9033
+  K left_arm 50 0 10 87.1298
+  K left_arm 60 0 10 124.2067
+
+
+

@@ -21,3 +21,8 @@ inline olc::vf2d RotateVector(const olc::vf2d& v, float angleRad) {
         s * v.x + c * v.y
     };
 }
+
+inline uint8_t MulU8(uint8_t a, uint8_t b) {
+    uint32_t t = (uint32_t)a * b + 128;
+    return (uint8_t)((t + (t >> 8)) >> 8);
+}
