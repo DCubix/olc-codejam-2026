@@ -52,6 +52,7 @@ namespace gui {
 
     void Label(State& gui, const std::string& text, const olc::vf2d& scale = {1,1}, const olc::Pixel& color = olc::Colour::WHITE);
     bool Button(State& gui, sID id, const std::string& text, const olc::vf2d& scale = {1,1});
+    void DrawButton(State& gui, Rect r, WidgetState state, const std::string& text, const olc::vf2d& scale = {1,1});
 
     void ContainerRect(State& gui, Rect rect);
     Rect ContainerPop(State& gui);

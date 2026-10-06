@@ -90,21 +90,22 @@ namespace gui {
         return state;
     }
     
+    // [<] [ option ] [>], drawn like Button. The arrows step back/forward and wrap,
+    // clicking the middle steps forward.
     bool Option(State &gui, sID id, int &value, const std::string *options, size_t numOptions)
     {
-        if (numOptions == 0) return false;
+        if (gui.rectStack.empty() || numOptions == 0) return false;
+        const int count = static_cast<int>(numOptions);
+        const int prev = value = std::clamp(value, 0, count - 1);
 
-        value = std::clamp(value, 0, static_cast<int>(numOptions - 1));
-        return Number(
-            gui,
-            id,
-            value,
-            1,
-            0,
-            static_cast<int>(numOptions - 1),
-            options[value],
-            true
-        );
+        BeginContainer(gui);
+        int arrow = std::get<1>(gui.rectStack.back()).y; // square arrow buttons
+        if (Button(gui, ContainerLeft(gui, arrow), id + "#-", "<")) value = (value + count - 1) % count;
+        if (Button(gui, ContainerRight(gui, arrow), id + "#+", ">")) value = (value + 1) % count;
+        if (Button(gui, id, options[prev])) value = (value + 1) % count;
+        EndContainer(gui);
+
+        return value != prev;
     }
 
     // pushes a copy of the current rect
@@ -127,12 +128,9 @@ namespace gui {
         gui.pge->GetDraw().StringProp(pos, text, color, scale);
     }
 
-    bool Button(State &gui, sID id, const std::string &text, const olc::vf2d& scale)
+    void DrawButton(State &gui, Rect r, WidgetState state, const std::string &text, const olc::vf2d &scale)
     {
-        if (gui.rectStack.empty()) return false;
-        auto [pos, size] = gui.rectStack.back();
-        auto state = ClickableArea(gui, StrID(id));
-
+        auto [pos, size] = r;
         auto& draw = gui.pge->GetDraw();
 
         switch (state) {
@@ -151,7 +149,13 @@ namespace gui {
         draw.StringProp(pos + (size - textSize) / 2, text, olc::Colour::WHITE, scale);
 
         draw.Rect(pos, size);
+    }
 
+    bool Button(State &gui, sID id, const std::string &text, const olc::vf2d& scale)
+    {
+        if (gui.rectStack.empty()) return false;
+        auto state = ClickableArea(gui, StrID(id));
+        DrawButton(gui, gui.rectStack.back(), state, text, scale);
         return state == WidgetState::Clicked;
     }
 

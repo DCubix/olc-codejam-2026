@@ -175,9 +175,10 @@ public:
         SRL("assets/sounds/tank-death2.wav");
         SRL("assets/sounds/tank-hit.wav");
 
-		modes[size_t(PlayState::MENU)] = std::make_unique<MenuState>();
+		auto game = std::make_unique<InGameState>();
+		modes[size_t(PlayState::MENU)] = std::make_unique<MenuState>(game->difficulty);
 		modes[size_t(PlayState::ABOUT)] = std::make_unique<AboutState>();
-		modes[size_t(PlayState::IN_GAME)] = std::make_unique<InGameState>();
+		modes[size_t(PlayState::IN_GAME)] = std::move(game);
 
 		for (auto& mode : modes) mode->OnCreate(this);
 
