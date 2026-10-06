@@ -69,6 +69,11 @@ public:
         gui::Label(ui, gui::ContainerTop(ui, kLine + 4), "GAME", {1, 1}, olc::Colour::YELLOW);
         gui::Label(ui, gui::ContainerTop(ui, kLine), "By Diego Lopes");
         gui::Label(ui, gui::ContainerTop(ui, kLine), "Made with olcPixelGameEngine 3");
+        gui::ContainerTop(ui, kLine); // gap
+        gui::Label(ui, gui::ContainerTop(ui, kLine + 4), "AI DISCLOSURE", {1, 1}, olc::Colour::YELLOW);
+        gui::Label(ui, gui::ContainerTop(ui, kLine), "Code partly written with");
+        gui::Label(ui, gui::ContainerTop(ui, kLine), "AI assistance (Claude Opus 5.5");
+        gui::Label(ui, gui::ContainerTop(ui, kLine), "and Sonnet 5.5)");
         gui::ContainerPop(ui);
 
         // Right column: sound credits

@@ -47,8 +47,10 @@ public:
 
         gui::ContainerTop(ui, 4); // gap
         if (gui::Button(ui, gui::ContainerTop(ui, 24), "about", "About")) next = PlayState::ABOUT;
+#ifndef __EMSCRIPTEN__ // a browser tab cannot be closed by the page
         gui::ContainerTop(ui, 4); // gap
         if (gui::Button(ui, gui::ContainerTop(ui, 24), "quit", "Quit")) next = PlayState::QUIT;
+#endif
         gui::ContainerPop(ui);
 
         return next;

@@ -9,6 +9,7 @@
 #include <memory>
 #include <cstdint>
 #include <cmath>
+#include <numbers>
 
 constexpr float pi = std::numbers::pi_v<float>;
 

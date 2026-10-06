@@ -54,5 +54,12 @@ pge3_prepare_platforms()
 # add_executable with all of the pge3 batteries includes
 pge3_add_program(${CMAKE_PROJECT_NAME} ${SOURCES})
 
+# Web build: itch.io expects index.html at the root of the uploaded zip
+if(EMSCRIPTEN)
+    set(SHELL_FILE ${CMAKE_CURRENT_SOURCE_DIR}/web/shell.html)
+    set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME index LINK_DEPENDS ${SHELL_FILE})
+    target_link_options(${CMAKE_PROJECT_NAME} PRIVATE --shell-file ${SHELL_FILE})
+endif()
+
 # copy/manage assets directory
 pge3_handle_assets(${CMAKE_PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/assets)
