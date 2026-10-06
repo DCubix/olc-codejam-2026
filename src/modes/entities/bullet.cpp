@@ -23,8 +23,6 @@ void PlayerBullet::OnCreate(olc::PixelGameEngine *pge)
 
 void PlayerBullet::OnUpdate(olc::PixelGameEngine *pge, float fElapsedTime)
 {
-    auto& draw = pge->GetDraw();
-
     position += direction * fElapsedTime * speed;
     if (gravity) {
         direction = (direction + olc::vf2d{0.0f, 1.0f} * fElapsedTime * 2.0f).norm();
@@ -33,12 +31,18 @@ void PlayerBullet::OnUpdate(olc::PixelGameEngine *pge, float fElapsedTime)
         }
     }
 
+    figure.Update(fElapsedTime);
+}
+
+void PlayerBullet::OnDraw(olc::PixelGameEngine *pge)
+{
+    auto& draw = pge->GetDraw();
     float angle = std::atan2(direction.y, direction.x) - M_PI_2;
 
     auto tmp = draw.GetWorldTransform();
     draw.WorldOffset(position);
     draw.WorldRotate(angle);
-    figure.Draw(draw, fElapsedTime);
+    figure.Draw(draw);
     draw.SetWorldTransform(tmp);
 }
 

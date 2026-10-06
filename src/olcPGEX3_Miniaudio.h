@@ -141,6 +141,7 @@ namespace olc::ext::Miniaudio
 		bool IsLoaded() const;
 	public: // advanced usage
 		ma_sound* GetMASound();
+		std::vector<ma_sound>& GetVoices() { return m_voices; }
 
 	private:
 		// pointer to the calling pgex

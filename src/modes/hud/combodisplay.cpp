@@ -57,7 +57,10 @@ void ComboDisplay::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
     if (Active() && m_timer <= 0.0f && data->combo > 0) {
         Reset();
     }
+}
 
+void ComboDisplay::OnDraw(olc::PixelGameEngine* pge)
+{
     auto& draw = pge->GetDraw();
     auto size = draw.GetTargetSize();
 

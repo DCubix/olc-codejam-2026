@@ -36,9 +36,8 @@ void Player::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
 {
     auto& mouse = pge->GetMouse();
     auto& keyboard = pge->GetKeyboard();
-    auto& draw = pge->GetDraw();
 
-    auto mp = draw.ScreenToWorld(mouse.GetPosition());
+    auto mp = game->ScreenToWorld(pge, mouse.GetPosition());
     auto dir = (mp - position).norm();
 
     olc::vf2d moveDir{0.0f, 0.0f};
@@ -83,8 +82,7 @@ void Player::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
         ) + Deg2Rad(20.0f);
     }
 
-    auto size = figure.Size();
-    auto renderPos = position - olc::vf2d{0.0f, size.y/2.6f};
+    auto renderPos = position - olc::vf2d{0.0f, figure.Size().y/2.6f};
 
     auto fnSpawnBullet = [&](const Weapon& w, uint32_t bulletNo) {
         auto bullet = game->Add<PlayerBullet>(*w.bulletAsset);
@@ -118,7 +116,7 @@ void Player::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
     const auto& w = gWeapons[weapon];
     // the timer always runs, so separate clicks fire as soon as the cooldown has passed
     shootTimer += fElapsedTime;
-    if ((mouse.GetButton(0).bHeld || mouse.GetButton(0).bPressed) && !IsDead() && !game->paused) {
+    if ((mouse.GetButton(0).bHeld || mouse.GetButton(0).bPressed) && !IsDead()) {
         const auto& gd = game->GameData();
         float fireRateMult = float(100 - gd.fireRateMultiplier) / 100.0f;
 
@@ -143,23 +141,28 @@ void Player::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
         m_damageColorTimer = 0.0f;
     }
 
+    figure.Update(fElapsedTime);
+
+    auto leftArm = figure.GetStick(figure.GetStickID("left_arm"));
+    if (!IsDead() && leftArm) {
+        // aim is added on top of the pose; animatedRotation is applied separately by Figure::Draw
+        leftArm->rotation = m_baseLeftArmAngle + aimAngle;
+    }
+}
+
+void Player::OnDraw(olc::PixelGameEngine* pge)
+{
+    auto& draw = pge->GetDraw();
+
     float t = m_damageColorTimer / 0.25f;
     olc::Pixel color = olc::PixelLerp(olc::Colour::WHITE, olc::PixelF(1.0f, 0.5f, 0.5f), t);
 
     auto light = game->GetLightContributionAt(position);
-
-    auto fnPreDrawAim = [&]() {
-        if (IsDead()) return;
-        auto leftArm = figure.GetStick(figure.GetStickID("left_arm"));
-        if (!leftArm) return;
-
-        // aim is added on top of the pose; animatedRotation is applied separately by Figure::Draw
-        leftArm->rotation = m_baseLeftArmAngle + aimAngle;
-    };
+    auto renderPos = position - olc::vf2d{0.0f, figure.Size().y/2.6f};
 
     auto tmp = draw.GetWorldTransform();
     draw.WorldOffset(renderPos);
-    figure.Draw(draw, fElapsedTime, m_flipX, color, light, fnPreDrawAim);
+    figure.Draw(draw, m_flipX, color, light);
     draw.SetWorldTransform(tmp);
 }
 

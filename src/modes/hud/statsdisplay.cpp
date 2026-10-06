@@ -7,7 +7,7 @@ StatsDisplay::StatsDisplay()
     Show();
 }
 
-void StatsDisplay::OnUpdate(olc::PixelGameEngine *pge, float fElapsedTime)
+void StatsDisplay::OnDraw(olc::PixelGameEngine *pge)
 {
     auto& draw = pge->GetDraw();
     auto size = pge->ScreenSize();

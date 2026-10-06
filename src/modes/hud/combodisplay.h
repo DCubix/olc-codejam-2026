@@ -10,6 +10,7 @@ class ComboDisplay : public HUDElement {
 public:
     void OnShow() override;
     void OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime) override;
+    void OnDraw(olc::PixelGameEngine* pge) override;
 
     // Call when the combo count goes up. Restarts the expiry timer.
     void Bump();

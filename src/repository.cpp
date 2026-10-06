@@ -100,6 +100,24 @@ ma::Sound *SoundRepository::GetSound(const std::string &name)
     return nullptr;
 }
 
+void SoundRepository::SetPaused(bool paused)
+{
+    if (paused) {
+        for (auto& [name, sound] : m_sounds) {
+            for (auto& voice : sound.GetVoices()) {
+                if (ma_sound_is_playing(&voice)) {
+                    ma_sound_stop(&voice); // keeps the cursor, so start resumes
+                    m_pausedVoices.push_back(&voice);
+                }
+            }
+        }
+    }
+    else {
+        for (auto* voice : m_pausedVoices) ma_sound_start(voice);
+        m_pausedVoices.clear();
+    }
+}
+
 std::unique_ptr<SoundRepository> SoundRepository::s_instance = nullptr;
 SoundRepository &SoundRepository::Get(ma::AudioEngine *audio)
 {

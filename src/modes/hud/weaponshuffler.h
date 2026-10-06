@@ -14,6 +14,7 @@ public:
     void OnShow() override;
     void OnHide() override;
     void OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime) override;
+    void OnDraw(olc::PixelGameEngine* pge) override;
 
     // Start (or keep) the countdown.
     void Resume() { m_stopping = false; Show(); }
@@ -53,4 +54,5 @@ protected:
     TweenAnimator m_tweens;
 
     int m_lastWeapon{0};
+    uint32_t m_shownWeapon{0};
 };

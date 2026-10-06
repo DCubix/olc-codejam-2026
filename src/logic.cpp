@@ -21,6 +21,12 @@ void Entity::Update(olc::PixelGameEngine* pge, float fElapsedTime)
     if (m_destroyed) OnDestroy(pge);
 }
 
+void Entity::Draw(olc::PixelGameEngine* pge)
+{
+    if (m_destroyed || !m_initialized) return;
+    OnDraw(pge);
+}
+
 void Entity::Destroy(float timeout)
 {
     m_destroyTimeout = timeout;
@@ -32,6 +38,12 @@ void HUDElement::Update(olc::PixelGameEngine *pge, float fElapsedTime)
 {
     if (!m_visible) return;
     OnUpdate(pge, fElapsedTime);
+}
+
+void HUDElement::Draw(olc::PixelGameEngine *pge)
+{
+    if (!m_visible) return;
+    OnDraw(pge);
 }
 
 void HUDElement::Show()

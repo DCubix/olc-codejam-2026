@@ -8,7 +8,7 @@ class StatsDisplay : public HUDElement {
 public:
     StatsDisplay();
 
-    void OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime) override;
+    void OnDraw(olc::PixelGameEngine* pge) override;
 
     Player* player{nullptr};
     GlobalGameData* data{nullptr};

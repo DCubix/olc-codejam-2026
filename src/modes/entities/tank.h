@@ -13,6 +13,7 @@ public:
     int TypeId() const override { return TypeIdOf<Tank>(); }
 
     void OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime) override;
+    void OnDraw(olc::PixelGameEngine* pge) override;
 
     enum class State {
         IDLE,
@@ -32,5 +33,6 @@ public:
     int health{ 0 }; // set from difficulty in the constructor
 
 private:
+    bool m_flipX{false};
     float m_damageColorTimer{0.0f};
 };

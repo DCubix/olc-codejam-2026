@@ -76,6 +76,116 @@ olc::vf2d Figure::GetStickWorldTipOffset(StickID sid) const
     return GetStickWorldOffset(sid) + (GetStickTipOffset(sid) - m_sticks[sid].offset - m_sticks[sid].animatedOffset);
 }
 
+void Figure::Update(float fElapsedTime)
+{
+    auto fnLerpAngle = [](float start, float end, float t) {
+        constexpr float PI = std::numbers::pi_v<float>;
+        constexpr float TWO_PI = PI * 2.0f;
+        float delta = std::fmod(end - start, TWO_PI);
+        if (delta > PI) delta -= TWO_PI;
+        else if (delta < -PI) delta += TWO_PI;
+        return start + delta * t;
+    };
+
+    auto fnAnimateStick = [=](Stick& stk, const Track& track, uint32_t frameNo) {
+        if (track.empty()) return;
+
+        auto last = std::prev(track.end());
+        auto kf0 = track.begin();
+
+        if (frameNo <= kf0->first) {
+            stk.animatedOffset = kf0->second.offset;
+            stk.animatedRotation = kf0->second.rotation;
+            stk.frame = kf0->second.spriteFrame;
+            return;
+        }
+
+        if (frameNo >= last->first) {
+            stk.animatedOffset = last->second.offset;
+            stk.animatedRotation = last->second.rotation;
+            stk.frame = last->second.spriteFrame;
+            return;
+        }
+
+        auto k2 = track.upper_bound(frameNo);
+        auto k1 = std::prev(k2);
+
+        const auto t1 = k1->first;
+        const auto t2 = k2->first;
+        const float t = float(frameNo - t1) / float(t2 - t1);
+
+        stk.animatedOffset = k1->second.offset.lerp(k2->second.offset, t);
+        stk.animatedRotation = fnLerpAngle(
+            k1->second.rotation,
+            k2->second.rotation,
+            t
+            );
+        // sprite frame: linear interpolation, rounded down to a whole tile index
+        const float f1 = float(k1->second.spriteFrame), f2 = float(k2->second.spriteFrame);
+        stk.frame = uint32_t(std::max(0.0f, std::floor(f1 + (f2 - f1) * t)));
+    };
+
+    if (m_currentAnimation.empty()) return;
+
+    auto& anim = m_animations[m_currentAnimation];
+
+    const float timeStep = 1.0f / 60.0f;
+
+    // update animation timing
+    anim.timer += fElapsedTime * m_animationTimeScale;
+    if (anim.durationFrames == 0) {
+        anim.currentFrame = 0;
+    } else if (anim.timer >= timeStep) {
+        anim.timer -= timeStep;
+        switch (anim.mode) {
+        case AnimationMode::ONE_SHOT: {
+            if (++anim.currentFrame >= anim.durationFrames) {
+                anim.currentFrame = anim.durationFrames-1;
+            }
+        } break;
+        case AnimationMode::LOOP: {
+            if (++anim.currentFrame >= anim.durationFrames) {
+                anim.currentFrame = 0;
+            }
+        } break;
+        case AnimationMode::PING_PONG: {
+            if (anim.durationFrames <= 1) {
+                anim.currentFrame = 0;
+                break;
+            }
+
+            if (anim.pingPongForward) {
+                if (anim.currentFrame + 1 >= anim.durationFrames) {
+                    anim.currentFrame = anim.durationFrames - 1;
+                    anim.pingPongForward = false;
+                } else {
+                    ++anim.currentFrame;
+                }
+            } else {
+                if (anim.currentFrame == 0) {
+                    anim.pingPongForward = true;
+                    ++anim.currentFrame;
+                } else {
+                    --anim.currentFrame;
+                }
+            }
+        } break;
+        }
+    }
+
+    // update sticks
+    const auto& tracks = m_animtationTracks[m_currentAnimation];
+    for (std::size_t sid = 0; sid < tracks.size(); ++sid) {
+        const auto& track = tracks[sid];
+
+        if (track.empty()) continue;
+
+        if (auto* stick = GetStick(static_cast<StickID>(sid))) {
+            fnAnimateStick(*stick, track, anim.currentFrame);
+        }
+    }
+}
+
 float Figure::GetStickWorldRotation(StickID sid) const
 {
     float parentRot = 0.0f;
@@ -174,122 +284,11 @@ void Figure::DrawStick(olc::Draw &draw, StickID sid, std::optional<olc::Pixel> c
 
 void Figure::Draw(
     olc::Draw &draw,
-    float fElapsedTime,
     bool flipX,
     std::optional<olc::Pixel> colorOverride,
-    std::optional<olc::Pixel> light,
-    std::function<void()> preDraw
+    std::optional<olc::Pixel> light
 )
 {
-    auto fnLerpAngle = [](float start, float end, float t) {
-        constexpr float PI = std::numbers::pi_v<float>;
-        constexpr float TWO_PI = PI * 2.0f;
-        float delta = std::fmod(end - start, TWO_PI);
-        if (delta > PI) delta -= TWO_PI;
-        else if (delta < -PI) delta += TWO_PI;
-        return start + delta * t;
-    };
-
-    auto fnAnimateStick = [=](Stick& stk, const Track& track, uint32_t frameNo) {
-        if (track.empty()) return;
-
-        auto last = std::prev(track.end());
-        auto kf0 = track.begin();
-
-        if (frameNo <= kf0->first) {
-            stk.animatedOffset = kf0->second.offset;
-            stk.animatedRotation = kf0->second.rotation;
-            stk.frame = kf0->second.spriteFrame;
-            return;
-        }
-
-        if (frameNo >= last->first) {
-            stk.animatedOffset = last->second.offset;
-            stk.animatedRotation = last->second.rotation;
-            stk.frame = last->second.spriteFrame;
-            return;
-        }
-
-        auto k2 = track.upper_bound(frameNo);
-        auto k1 = std::prev(k2);
-
-        const auto t1 = k1->first;
-        const auto t2 = k2->first;
-        const float t = float(frameNo - t1) / float(t2 - t1);
-
-        stk.animatedOffset = k1->second.offset.lerp(k2->second.offset, t);
-        stk.animatedRotation = fnLerpAngle(
-            k1->second.rotation,
-            k2->second.rotation,
-            t
-        );
-        // sprite frame: linear interpolation, rounded down to a whole tile index
-        const float f1 = float(k1->second.spriteFrame), f2 = float(k2->second.spriteFrame);
-        stk.frame = uint32_t(std::max(0.0f, std::floor(f1 + (f2 - f1) * t)));
-    };
-
-    if (!m_currentAnimation.empty()) {
-        auto& anim = m_animations[m_currentAnimation];
-
-        const float timeStep = 1.0f / 60.0f;
-
-        // update animation timing
-        anim.timer += fElapsedTime * m_animationTimeScale;
-        if (anim.durationFrames == 0) {
-            anim.currentFrame = 0;
-        } else if (anim.timer >= timeStep) {
-            anim.timer -= timeStep;
-            switch (anim.mode) {
-                case AnimationMode::ONE_SHOT: {
-                    if (++anim.currentFrame >= anim.durationFrames) {
-                        anim.currentFrame = anim.durationFrames-1;
-                    }
-                } break;
-                case AnimationMode::LOOP: {
-                    if (++anim.currentFrame >= anim.durationFrames) {
-                        anim.currentFrame = 0;
-                    }
-                } break;
-                case AnimationMode::PING_PONG: {
-                    if (anim.durationFrames <= 1) {
-                        anim.currentFrame = 0;
-                        break;
-                    }
-
-                    if (anim.pingPongForward) {
-                        if (anim.currentFrame + 1 >= anim.durationFrames) {
-                            anim.currentFrame = anim.durationFrames - 1;
-                            anim.pingPongForward = false;
-                        } else {
-                            ++anim.currentFrame;
-                        }
-                    } else {
-                        if (anim.currentFrame == 0) {
-                            anim.pingPongForward = true;
-                            ++anim.currentFrame;
-                        } else {
-                            --anim.currentFrame;
-                        }
-                    }
-                } break;
-            }
-        }
-
-        // update sticks
-        const auto& tracks = m_animtationTracks[m_currentAnimation];
-        for (std::size_t sid = 0; sid < tracks.size(); ++sid) {
-            const auto& track = tracks[sid];
-
-            if (track.empty()) continue;
-
-            if (auto* stick = GetStick(static_cast<StickID>(sid))) {
-                fnAnimateStick(*stick, track, anim.currentFrame);
-            }
-        }
-    }
-
-    if (preDraw) preDraw();
-
     std::vector<StickID> orderedSticks;
     orderedSticks.reserve(m_sticks.Size());
     for (StickID sid = 0; sid < m_sticks.Size(); sid++) {

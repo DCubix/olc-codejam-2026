@@ -70,6 +70,20 @@ void WeaponShuffler::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
         break;
     }
 
+    if (m_state == State::SHUFFLE) {
+        float t = std::fmodf(timer, 0.25f) / 0.25f;
+        constexpr uint32_t weaponCount = sizeof(gWeapons) / sizeof(gWeapons[0]);
+        m_shownWeapon = std::min(uint32_t(t * float(weaponCount)), weaponCount - 1);
+        // at every change, play a shuffle
+        if (int(m_shownWeapon) != m_lastWeapon) {
+            SRG("assets/sounds/weapon-shuffle.wav")->Play(false, 0.6f, 0.0f, RandomF(0.8f, 1.1f));
+            m_lastWeapon = int(m_shownWeapon);
+        }
+    }
+}
+
+void WeaponShuffler::OnDraw(olc::PixelGameEngine* pge)
+{
     if (m_state == State::IDLE) return;
 
     auto& draw = pge->GetDraw();
@@ -92,18 +106,7 @@ void WeaponShuffler::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
             flashColor
         );
 
-        constexpr uint32_t weaponCount = sizeof(gWeapons) / sizeof(gWeapons[0]);
-        uint32_t weapon = selectedWeapon;
-        if (m_state == State::SHUFFLE) {
-            float t = std::fmodf(timer, 0.25f) / 0.25f;
-            weapon = std::min(uint32_t(t * float(weaponCount)), weaponCount - 1);
-            // at every change, play a shuffle
-            if (weapon != m_lastWeapon) {
-                SRG("assets/sounds/weapon-shuffle.wav")->Play(false, 0.6f, 0.0f, RandomF(0.8f, 1.1f));
-                m_lastWeapon = weapon;
-            }
-        }
-        const auto& w = gWeapons[weapon];
+        const auto& w = gWeapons[m_state == State::SHUFFLE ? m_shownWeapon : selectedWeapon];
         const auto& weaponAsset = w.equipAsset;
 
         auto timeoutText = m_state == State::HOLD

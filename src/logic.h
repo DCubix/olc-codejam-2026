@@ -19,8 +19,10 @@ public:
     virtual void OnCreate(olc::PixelGameEngine* pge) {}
     virtual void OnDestroy(olc::PixelGameEngine* pge) {}
     virtual void OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime) {}
+    virtual void OnDraw(olc::PixelGameEngine* pge) {}
 
     void Update(olc::PixelGameEngine* pge, float fElapsedTime);
+    void Draw(olc::PixelGameEngine* pge);
 
     void Destroy(float timeout = 0.0f);
     bool IsDestroyed() const { return m_destroyed; }
@@ -54,8 +56,10 @@ public:
     virtual void OnShow() {}
     virtual void OnHide() {}
     virtual void OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime) {}
+    virtual void OnDraw(olc::PixelGameEngine* pge) {}
 
     void Update(olc::PixelGameEngine* pge, float fElapsedTime);
+    void Draw(olc::PixelGameEngine* pge);
 
     void Show();
     void Hide();

@@ -19,12 +19,11 @@ Tank::Tank(InGameState *game) : game(game)
 
 void Tank::OnUpdate(olc::PixelGameEngine *pge, float fElapsedTime)
 {
-    auto& draw = pge->GetDraw();
     auto target = game->Get<Player>();
 
     const auto targetVec = (target->position - position);
     const auto dirToTarget = targetVec.norm();
-    bool flipX = dirToTarget.x < 0.0f;
+    m_flipX = dirToTarget.x < 0.0f;
 
     auto size = figure.Size();
     auto renderPos = position - olc::vf2d{0.0f, size.y/2.6f};
@@ -106,19 +105,26 @@ void Tank::OnUpdate(olc::PixelGameEngine *pge, float fElapsedTime)
         }
     });
 
-    auto light = game->GetLightContributionAt(position);
-
     m_damageColorTimer -= fElapsedTime;
     if (m_damageColorTimer <= 0.0f) {
         m_damageColorTimer = 0.0f;
     }
+
+    figure.Update(fElapsedTime);
+}
+
+void Tank::OnDraw(olc::PixelGameEngine *pge)
+{
+    auto& draw = pge->GetDraw();
+    auto size = figure.Size();
+    auto light = game->GetLightContributionAt(position);
 
     float t = m_damageColorTimer / 0.25f;
     light = olc::PixelLerp(light, olc::PixelF(1.0f, 0.5f, 0.5f), t);
 
     auto tmp = draw.GetWorldTransform();
     draw.WorldOffset(position - olc::vf2d{0.0f, size.y/2.4f});
-    figure.Draw(draw, fElapsedTime, flipX, {}, light);
+    figure.Draw(draw, m_flipX, {}, light);
     draw.SetWorldTransform(tmp);
 
     // draw.Rect(

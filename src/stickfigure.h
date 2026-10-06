@@ -68,13 +68,12 @@ public:
     olc::vf2d GetStickWorldOffset(StickID sid) const;
     olc::vf2d GetStickWorldTipOffset(StickID sid) const;
 
+    void Update(float fElapsedTime);
     void Draw(
         olc::Draw& draw,
-        float fElapsedTime,
         bool flipX = false,
         std::optional<olc::Pixel> colorOverride = std::nullopt,
-        std::optional<olc::Pixel> light = std::nullopt,
-        std::function<void()> preDraw = nullptr
+        std::optional<olc::Pixel> light = std::nullopt
     );
 
     void PlayAnimation(const std::string& name, float timeScale = 1.0f);

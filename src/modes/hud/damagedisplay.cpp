@@ -10,9 +10,13 @@ void DamageDisplay::OnShow()
 
 void DamageDisplay::OnUpdate(olc::PixelGameEngine *pge, float fElapsedTime)
 {
-    auto& draw = pge->GetDraw();
-
     m_blinkTimer = std::max(m_blinkTimer - fElapsedTime, 0.0f);
+    m_tweens.Update(fElapsedTime);
+}
+
+void DamageDisplay::OnDraw(olc::PixelGameEngine *pge)
+{
+    auto& draw = pge->GetDraw();
 
     float flashTime = std::fmodf(m_blinkTimer, 0.15f) / 0.15f;
     float flashValue = std::sinf(flashTime * pi * 2.0f);
@@ -37,8 +41,6 @@ void DamageDisplay::OnUpdate(olc::PixelGameEngine *pge, float fElapsedTime)
             olc::Colour::WHITE
         );
     };
-
-    m_tweens.Update(fElapsedTime);
 
     std::string damageText = player->damageCounter < params->damageHitsToLoseCombo
         ? "Damage!" : "Combo Lost :(";

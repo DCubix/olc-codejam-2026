@@ -118,6 +118,16 @@ public:
          */
         SRL("assets/sounds/heartbeat.wav");
 
+        /**
+         * Simple or Cute UI / UX / Interface Hover sound by Feraly_ -- https://freesound.org/s/836451/ -- License: Creative Commons 0
+         */
+        SRL("assets/sounds/ui-hover.wav");
+
+        /**
+         * Simple or Cute UI / UX / Interface Confirm sound by Feraly_ -- https://freesound.org/s/836450/ -- License: Creative Commons 0
+         */
+        SRL("assets/sounds/ui-confirm.wav");
+
         // My own sounds
         SRL("assets/sounds/swarmer-ouch1.wav");
         SRL("assets/sounds/swarmer-ouch2.wav");

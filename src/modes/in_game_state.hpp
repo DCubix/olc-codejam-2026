@@ -8,6 +8,8 @@
 #include "../difficulty.hpp"
 #include "../repository.h"
 
+#include "../gui.h"
+
 #include "entities/player.h"
 #include "entities/swarmer.h"
 #include "entities/tank.h"
@@ -83,6 +85,8 @@ in vec4 oCol;
         fxRedVignetteShader.CreateUniform("uIntensity");
 
         pge->CreateImage(fxRedVignetteTex, pge->ScreenSize());
+
+        ui = gui::State(pge);
 
         return false;
     }
@@ -176,12 +180,12 @@ in vec4 oCol;
 
     PlayState OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime) override
     {
+        ui.Update();
+
         auto& keys = pge->GetKeyboard();
         if (keys.GetKey(olc::Key::ESCAPE).bPressed || keys.GetKey(olc::Key::P).bPressed) {
             SetPaused(!paused);
         }
-        // everything runs with dt = 0 while paused, so the scene is drawn frozen
-        if (paused) fElapsedTime = 0.0f;
 
         // Add queued entities
         for (auto& e : entityQueue) {
@@ -189,7 +193,46 @@ in vec4 oCol;
         }
         entityQueue.clear();
 
+        if (!paused) UpdateLogic(pge, fElapsedTime);
 
+        OnDraw(pge);
+
+        // UI
+        if (paused) {
+            auto& draw = pge->GetDraw();
+            auto size = draw.GetTargetSize();
+            draw.FilledRect({0, 0}, size, olc::PixelF(0.0f, 0.0f, 0.0f, 0.6f));
+
+            constexpr int kPauseWidth = 160;
+            constexpr int kPauseHeight = 100;
+            gui::ContainerRect(ui, {{size.x / 2 - kPauseWidth / 2, size.y / 2 - kPauseHeight / 2}, {kPauseWidth, kPauseHeight}});
+            gui::Label(ui, gui::ContainerTop(ui, 24), "PAUSED", {2.0f, 2.0f});
+            if (gui::Button(ui, gui::ContainerTop(ui, 24), "resume", "Resume")) {
+                SetPaused(false);
+            }
+            gui::ContainerTop(ui, 4); // gap
+            if (gui::Button(ui, gui::ContainerTop(ui, 24), "back_menu", "Back to Menu")) {
+                // TODO: Menu
+            }
+            gui::ContainerPop(ui);
+        }
+
+        return PlayState::IN_GAME;
+    }
+
+    // World to screen offset: screen position + CameraOffset = world position.
+    olc::vf2d CameraOffset(olc::PixelGameEngine* pge) const
+    {
+        return camera - pge->ScreenSize() / 2.0f - cameraShaker;
+    }
+
+    olc::vf2d ScreenToWorld(olc::PixelGameEngine* pge, const olc::vf2d& screenPos) const
+    {
+        return screenPos + CameraOffset(pge);
+    }
+
+    void UpdateLogic(olc::PixelGameEngine* pge, float fElapsedTime)
+    {
         auto player = Get<Player>();
 
         longTimer += fElapsedTime;
@@ -219,12 +262,8 @@ in vec4 oCol;
                     {kFloorMax.x - kTile*2, kFloorMax.y - kTile*2}
                 };
 
-                float randomAngle = RandomF(-pi, pi);
-                // sx = either -spawnDistanceX or +spawnDistanceX
                 int corner = RandomI(0, 3);
                 olc::vf2d pos = spawnLocations[corner];
-
-                auto playerSize = player->figure.Size();
 
                 float chance = RandomF(0.0f, 1.0f);
 
@@ -240,12 +279,6 @@ in vec4 oCol;
 
         tweenAnimator.Update(fElapsedTime);
 
-        auto& gd = *m_pGlobalData.get();
-
-        auto& draw = pge->GetDraw();
-
-        draw.Clear(olc::Colour::BLACK);
-
         std::stable_sort(entities.begin(), entities.end(), [](const auto& a, const auto& b) {
             return a->position.y < b->position.y;
         });
@@ -254,14 +287,9 @@ in vec4 oCol;
         auto diff = player->position - camera;
         camera += diff * std::min(fElapsedTime * 3.0f, 1.0f);
 
-        auto cameraPos = camera - pge->ScreenSize() / 2.0f;
-        DrawFloor(pge, cameraPos - cameraShaker);
-        draw.WorldOffset(-cameraPos + cameraShaker);
-
         for (auto& e : entities) {
             e->Update(pge, fElapsedTime);
         }
-        draw.WorldReset();
 
         for (auto& e1 : entities) {
             if (!e1->resolveCollision) continue;
@@ -301,32 +329,12 @@ in vec4 oCol;
         damageDisplay.Update(pge, fElapsedTime);
         statsDisplay.Update(pge, fElapsedTime);
 
-        if (paused) {
-            auto size = draw.GetTargetSize();
-            draw.FilledRect({0, 0}, size, olc::PixelF(0.0f, 0.0f, 0.0f, 0.6f));
-            const std::string title = "PAUSED", hint = "Esc or P to resume";
-            auto ts = draw.GetTextSize(title, true), hs = draw.GetTextSize(hint, true);
-            draw.StringProp({ size.x / 2.0f - ts.x / 2.0f, size.y / 2.0f - ts.y }, title, olc::Colour::WHITE);
-            draw.StringProp({ size.x / 2.0f - hs.x / 2.0f, size.y / 2.0f + 4.0f }, hint, olc::Colour::GREY);
-        }
-
         // FX
+        vignetteIntensity = 0.0f;
         if (player->health <= Params().playerCriticalHealth) {
-            draw.SetTarget(fxRedVignetteTex);
-            draw.Clear(olc::Colour::BLACK);
-            draw.SetShader(fxRedVignetteShader);
-
             float intensity = float(Params().playerCriticalHealth - player->health) / float(Params().playerCriticalHealth);
             float pulsating = (0.5f + 0.5f * std::sin(longTimer * 6.0f)) * 0.15f;
-            draw.SetShaderUniform("uIntensity", intensity + pulsating);
-            draw.FilledRect({0,0}, pge->ScreenSize());
-            draw.ResetShader();
-
-            draw.SetTarget(pge->GetScreen());
-
-            draw.SetBlendMode(olc::BlendMode::Additive);
-            draw.Image(fxRedVignetteTex.all(), {0,0});
-            draw.SetBlendMode(olc::BlendMode::Alpha);
+            vignetteIntensity = intensity + pulsating;
 
             // play heart beat sound when pulsating
             if (intensity > 0.0f && pulsating < 0.01f) {
@@ -336,23 +344,43 @@ in vec4 oCol;
 
         // move light to player
         lights.back().pos = player->position;
+    }
 
-        // show GD stats (debug)
-        // draw.StringProp(
-        //     { 8, 8 },
-        //     "Score: " + std::to_string(gd.score) + "\n"
-        //     "Hits: " + std::to_string(gd.hits) + "\n"
-        //     "Speed Mul.: " + std::to_string(gd.moveSpeedMultiplier) + "\n"
-        //     "Fire Rate Mul.: " + std::to_string(gd.fireRateMultiplier) + "\n"
-        //     "Score Mul.: " + std::to_string(gd.scoreMultiplier) + "\n"
-        //     "Combo: " + std::to_string(gd.combo) + "\n"
-        //     "Swarmers: " + std::to_string(swarmers) + "\n"
-        //     "Swap Countdown: " + std::to_string(weaponShuffler.timer) + "\n"
-        //     "Health: " + std::to_string(Get<Player>()->health),
-        //     olc::Colour::WHITE
-        // );
+    void OnDraw(olc::PixelGameEngine* pge)
+    {
+        auto& draw = pge->GetDraw();
 
-        return PlayState::IN_GAME;
+        draw.Clear(olc::Colour::BLACK);
+
+        auto cameraOffset = CameraOffset(pge);
+        DrawFloor(pge, camera - pge->ScreenSize() / 2.0f - cameraShaker);
+        draw.WorldOffset(-cameraOffset);
+
+        for (auto& e : entities) {
+            e->Draw(pge);
+        }
+        draw.WorldReset();
+
+        comboDisplay.Draw(pge);
+        weaponShuffler.Draw(pge);
+        damageDisplay.Draw(pge);
+        statsDisplay.Draw(pge);
+
+        // FX
+        if (Get<Player>()->health <= Params().playerCriticalHealth) {
+            draw.SetTarget(fxRedVignetteTex);
+            draw.Clear(olc::Colour::BLACK);
+            draw.SetShader(fxRedVignetteShader);
+            draw.SetShaderUniform("uIntensity", vignetteIntensity);
+            draw.FilledRect({0,0}, pge->ScreenSize());
+            draw.ResetShader();
+
+            draw.SetTarget(pge->GetScreen());
+
+            draw.SetBlendMode(olc::BlendMode::Additive);
+            draw.Image(fxRedVignetteTex.all(), {0,0});
+            draw.SetBlendMode(olc::BlendMode::Alpha);
+        }
     }
 
     // Draws floor.png as 32x32 world tiles on a ground plane tilted around X.
@@ -437,14 +465,12 @@ in vec4 oCol;
         return GetEntityCount<T>() + GetEntityCount<U, Rest...>();
     }
 
-    // Stops (or resumes) all audio too, so overlapping one-shots freeze with the scene.
+    // Pauses (or resumes) playing sounds too, so overlapping one-shots freeze with the scene.
     void SetPaused(bool value)
     {
         if (paused == value) return;
         paused = value;
-        auto& engine = SoundRepository::Get().Audio().GetEngine();
-        if (paused) ma_engine_stop(&engine);
-        else ma_engine_start(&engine);
+        SoundRepository::Get().SetPaused(paused);
     }
 
     void AwardScore(int amt = 5)
@@ -540,8 +566,12 @@ in vec4 oCol;
     TweenAnimator tweenAnimator;
 
     float longTimer{0.0f};
+    float vignetteIntensity{0.0f};
 
     // FX
     olc::gpu::Shader_GLSL33 fxRedVignetteShader;
     olc::Image fxRedVignetteTex;
+
+    // UI
+    gui::State ui;
 };

@@ -15,6 +15,7 @@ class DamageDisplay : public HUDElement
 public:
     void OnShow() override;
     void OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime) override;
+    void OnDraw(olc::PixelGameEngine* pge) override;
 
     void Bump();
     void Reset();

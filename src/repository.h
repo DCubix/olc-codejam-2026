@@ -50,10 +50,15 @@ public:
 
     ma::AudioEngine& Audio() { return *m_audio; }
 
+    // Pauses every playing voice, or resumes the ones it paused.
+    // The engine keeps running, so sounds started while paused (UI) still play.
+    void SetPaused(bool paused);
+
     static SoundRepository& Get(ma::AudioEngine* audio = nullptr);
 private:
     ma::AudioEngine* m_audio{nullptr};
     std::map<std::string, ma::Sound> m_sounds;
+    std::vector<ma_sound*> m_pausedVoices;
 
     static std::unique_ptr<SoundRepository> s_instance;
 };
