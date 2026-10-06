@@ -96,6 +96,9 @@ in vec4 oCol;
         m_pGlobalData = std::make_shared<GlobalGameData>();
 
         auto player = Add<Player>(this);
+#ifndef NDEBUG
+        player->health = Params().playerCriticalHealth;
+#endif
 
         comboDisplay.data = m_pGlobalData.get();
         comboDisplay.params = &Params();
@@ -128,9 +131,12 @@ in vec4 oCol;
         player->onDeath = [this]() {
             weaponShuffler.RequestStop();
             comboDisplay.Reset();
+            subState = SubState::DYING;
         };
 
         paused = false;
+        subState = SubState::PLAYING;
+        deathTimer = 0.0f;
 
         damageDisplay.player = player;
         damageDisplay.params = &Params();
@@ -183,7 +189,8 @@ in vec4 oCol;
         ui.Update();
 
         auto& keys = pge->GetKeyboard();
-        if (keys.GetKey(olc::Key::ESCAPE).bPressed || keys.GetKey(olc::Key::P).bPressed) {
+        if (subState == SubState::PLAYING &&
+            (keys.GetKey(olc::Key::ESCAPE).bPressed || keys.GetKey(olc::Key::P).bPressed)) {
             SetPaused(!paused);
         }
 
@@ -193,11 +200,23 @@ in vec4 oCol;
         }
         entityQueue.clear();
 
-        if (!paused) UpdateLogic(pge, fElapsedTime);
+        if (subState == SubState::PLAYING) {
+            if (!paused) UpdateLogic(pge, fElapsedTime);
+        } else if (subState == SubState::DYING) {
+            // slow motion; the timer counts real time
+            UpdateLogic(pge, fElapsedTime * 0.5f);
+            deathTimer += fElapsedTime;
+            if (deathTimer >= kDeathSlowmoDuration) {
+                SRG("assets/sounds/bam.wav")->Play(false, 0.8f, 0.0f, 0.6f);
+                subState = SubState::GAME_OVER;
+            }
+        }
+        // GAME_OVER: no logic update, the last frame stays on screen
 
         OnDraw(pge);
 
         // UI
+        PlayState next = PlayState::IN_GAME;
         if (paused) {
             auto& draw = pge->GetDraw();
             auto size = draw.GetTargetSize();
@@ -212,12 +231,38 @@ in vec4 oCol;
             }
             gui::ContainerTop(ui, 4); // gap
             if (gui::Button(ui, gui::ContainerTop(ui, 24), "back_menu", "Back to Menu")) {
-                // TODO: Menu
+                next = PlayState::MENU;
             }
             gui::ContainerPop(ui);
         }
 
-        return PlayState::IN_GAME;
+        if (subState == SubState::GAME_OVER) {
+            auto& draw = pge->GetDraw();
+            auto size = draw.GetTargetSize();
+            draw.FilledRect({0, 0}, size, olc::PixelF(0.0f, 0.0f, 0.0f, 0.6f));
+
+            constexpr int kWidth = 160;
+            constexpr int kHeight = 100;
+            bool restart = false;
+            gui::ContainerRect(ui, {{size.x / 2 - kWidth / 2, size.y / 2 - kHeight / 2}, {kWidth, kHeight}});
+            gui::Label(ui, gui::ContainerTop(ui, 24), "GAME OVER", {2.0f, 2.0f});
+            if (gui::Button(ui, gui::ContainerTop(ui, 24), "play_again", "Play Again")) {
+                restart = true;
+            }
+            gui::ContainerTop(ui, 4); // gap
+            if (gui::Button(ui, gui::ContainerTop(ui, 24), "game_over_menu", "Back to Menu")) {
+                next = PlayState::MENU;
+            }
+            gui::ContainerPop(ui);
+
+            // the new player is moved into `entities` at the start of the next update, before it is used
+            if (restart) {
+                OnExitMode(pge);
+                OnEnterMode(pge);
+            }
+        }
+
+        return next;
     }
 
     // World to screen offset: screen position + CameraOffset = world position.
@@ -555,6 +600,11 @@ in vec4 oCol;
 
     float timer{0.0f};
     bool paused{false};
+
+    enum class SubState { PLAYING, DYING, GAME_OVER };
+    SubState subState{SubState::PLAYING};
+    float deathTimer{0.0f};
+    static constexpr float kDeathSlowmoDuration = 2.0f; // real seconds of slow motion before the game over screen
 
     ComboDisplay comboDisplay;
     WeaponShuffler weaponShuffler;

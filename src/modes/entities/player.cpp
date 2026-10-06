@@ -148,6 +148,12 @@ void Player::OnUpdate(olc::PixelGameEngine* pge, float fElapsedTime)
         // aim is added on top of the pose; animatedRotation is applied separately by Figure::Draw
         leftArm->rotation = m_baseLeftArmAngle + aimAngle;
     }
+
+    auto frame = figure.GetCurrentFrame("run");
+    if (frame != m_lastRunFrame && (frame == 9 || frame == 29)) {
+        SRG("assets/sounds/footstep.wav")->Play(false, 0.3f, 0.0f, RandomF(0.8f, 1.2f));
+    }
+    m_lastRunFrame = frame;
 }
 
 void Player::OnDraw(olc::PixelGameEngine* pge)

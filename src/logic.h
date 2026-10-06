@@ -37,7 +37,8 @@ protected:
     bool m_destroyed{false}, m_initialized{false};
 };
 
-enum class PlayState { IN_GAME = 0, MAX_STATES };
+// QUIT is after MAX_STATES: it has no mode, main.cpp ends the app when it is returned
+enum class PlayState { MENU = 0, ABOUT, IN_GAME, MAX_STATES, QUIT };
 struct GlobalGameData {
     int score{0};
     int combo{0}, hits{0};

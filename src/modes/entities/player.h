@@ -70,4 +70,5 @@ private:
     float m_damageColorTimer{0.0f};
     float m_healthRechargeTimer{0.0f};
     float m_baseLeftArmAngle{0.0f};
+    uint32_t m_lastRunFrame{0};
 };
